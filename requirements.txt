@@ -1,0 +1,6 @@
+click
+Flask
+Flask_SocketIO
+Werkzeug
+Flask_Session
+simple-websocket

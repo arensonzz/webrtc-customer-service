@@ -1,0 +1,72 @@
+// Import fonts
+@use "fonts";
+
+* {
+  font-family: Poppins, sans-serif;
+}
+
+nav .navbar-brand {
+  font-size: xx-large;
+}
+
+// layout.html
+
+// auth/register.html
+.form-container {
+  text-align: left;
+  max-width: 400px;
+}
+
+// chat/create_room.html
+.create-room-container {
+  max-width: 800px;
+}
+
+// chat/live_chat.html
+.message-container {
+  height: min(500px);
+}
+
+.message-info,
+.message-text {
+  font-size: 0.9rem;
+}
+
+// dialog arow for messages
+// Inspired from: https://codepen.io/ompmega/pen/qByYQd
+.dialog-box {
+  .arrow {
+    .inner {
+      width: 0;
+      height: 0;
+      border-right: 20px solid #fff;
+      border-top: 10px solid transparent;
+      border-bottom: 10px solid transparent;
+      position: absolute;
+      top: 0;
+      left: 2px;
+    }
+
+    .outer {
+      width: 0;
+      height: 0;
+      border-right: 20px solid #dee2e6;
+      border-top: 10px solid transparent;
+      border-bottom: 10px solid transparent;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+
+    display: inline-block;
+    width: 12px;
+    height: 20px;
+    overflow: hidden;
+    position: absolute;
+    float: left;
+    bottom: 3px;
+    left: -10px;
+  }
+
+  position: relative;
+}

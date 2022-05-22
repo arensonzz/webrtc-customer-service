@@ -1,0 +1,8 @@
+// contains all the resets, variables, mixins, and utility classes
+@import "base";
+
+// everything that is reusable – buttons, navbars, cards, and so on
+@import "components";
+
+// all the Sass code handling the layout, which is the container and grid systems
+@import "layout";

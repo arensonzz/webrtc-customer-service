@@ -1,0 +1,36 @@
+{% extends "layout.html" %}
+
+{% block title %}
+Login
+{% endblock %}
+
+{% block main %}
+<!-- Login form -->
+
+<div class="container text-center test-sass">
+  <h1 class="text-primary mb-4">Log In</h1>
+  <div class="mx-auto form-container">
+    <form action="{{ url_for("auth.login") }}" method="post" accept-charset="utf-8">
+      <div class="mb-3">
+        <label for="email" class="form-label">Email Address</label>
+        <input autocomplete="off" autofocus type="text" class="form-control" id="email" name="email"
+          value="{{ request.form["email"] }}">
+        {% if errors["email"] %}
+        <p class="text-danger mt-1">{{ errors["email"] }}</p>
+        {% endif %}
+      </div>
+      <div class="mb-3">
+        <label for="password" class="form-label">Password</label>
+        <input type="password" class="form-control" id="password" name="password">
+        {% if errors["password"] %}
+        <p class="text-danger mt-1">{{ errors["password"] }}</p>
+        {% endif %}
+      </div>
+      <div class="d-flex d-md-block ">
+        <button type="submit" class="btn btn-primary flex-grow-1">Log in</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% endblock %}
