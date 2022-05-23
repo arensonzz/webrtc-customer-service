@@ -14,7 +14,6 @@ def create_app(test_config=None):
     # Set config values
     app.config.from_mapping(
         SECRET_KEY='dev',
-        DATABASE=os.path.join(app.instance_path, 'flask_group_chat.sqlite'),
         SESSION_TYPE='filesystem',
         SESSION_PERMANENENT=False,
     )
@@ -42,18 +41,19 @@ def create_app(test_config=None):
     socketio.init_app(app)
 
     # Register blueprints
-    from . import (auth, chat)
+    from . import (auth, representative)
     app.register_blueprint(auth.bp)
-    app.register_blueprint(chat.bp)
-    # Make chat index the root
-    app.add_url_rule('/', endpoint='chat.index')
+    app.register_blueprint(representative.bp)
+    # Make representative index the root
+    app.add_url_rule('/', endpoint='representative.index')
 
     # A route to test Flask connection
     @app.route('/test')
     def test():
         """Test Flask connection."""
         from . import db
-        db = db.get_db()
+        cur = db.get_db()
+        cur.close()
         return "Server is working.", 200
 
     return app

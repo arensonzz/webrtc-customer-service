@@ -13,6 +13,32 @@ We aim to provide free and open-source web conferencing application to be used i
     ```sh
     pip3 install -r requirements.txt
     ```
+1. Install Python PostgreSQL driver [psycopg2](https://www.psycopg.org/docs/install.html#quick-install)
+
+    1. Build prerequisites (installation shown for Ubuntu derivatives)\
+        **Note**: Update apt cache first with `sudo apt update`
+        1. A C compiler
+            ```sh
+            sudo apt install gcc
+            ```
+        1. python3-dev system package
+            ```sh
+            sudo apt install python3-dev
+            ```
+        1. libpq-dev system package
+            ```sh
+            sudo apt install libpq-dev
+            ```
+        1. PostgreSQL server
+            ```sh
+            sudo apt install postgresql postgresql-contrib
+            ```
+    2. Build from source
+
+        ```sh
+        pip3 install psycopg2
+        ```
+
 1. Initiate the PostgreSQL database with Flask CLI command
     ```sh
     flask init-db

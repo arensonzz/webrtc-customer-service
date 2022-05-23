@@ -1,23 +1,25 @@
-import sqlite3
+import psycopg2
+from psycopg2.extras import DictCursor
 
 import click
 from flask import current_app, g
 from flask.cli import with_appcontext
 
 
-def get_db() -> sqlite3.Connection:
-    """Connect to sqlite3 database and return connection."""
+def get_db():
+    """Connect to PostgreSQL database and return cursor of connection."""
     if 'db' not in g:
         # `g` object is used to store connection for multiple access to a data
         # during a request
-        g.db = sqlite3.connect(
-            current_app.config['DATABASE'],
-            detect_types=sqlite3.PARSE_DECLTYPES
+        g.db = psycopg2.connect(
+            host=current_app.config["DB_HOST"],
+            database=current_app.config['DB_NAME'],
+            user=current_app.config['DB_USER'],
+            password=current_app.config['DB_PASSWORD'],
+            port=current_app.config['DB_PORT'],
         )
-        # Return rows that act like dicts
-        g.db.row_factory = sqlite3.Row
 
-    return g.db
+    return g.db.cursor(cursor_factory=DictCursor)
 
 
 def close_db(e=None):
@@ -33,7 +35,8 @@ def import_sql(filepath):
     db = get_db()
 
     with current_app.open_resource(filepath) as f:
-        db.executescript(f.read().decode('utf8'))
+        db.execute(f.read().decode('utf8'))
+        g.db.commit()
 
 
 @click.command('init-db')
