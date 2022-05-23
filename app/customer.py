@@ -1,0 +1,27 @@
+from flask import (
+    Blueprint, flash, g, redirect, render_template, request, session, url_for, Markup
+)
+from werkzeug.security import check_password_hash, generate_password_hash
+
+import logging
+from app.db import get_db
+from flask_socketio import emit, leave_room, join_room as flask_join_room
+from . import socketio
+
+# Uncomment following line to print DEBUG logs
+#  logging.basicConfig(encoding='utf-8', level=logging.DEBUG)
+
+bp = Blueprint('customer', __name__)
+
+
+# ROUTES
+@bp.route('/', methods=('GET',))
+def index():
+    """Index page that contains links to each user's interface."""
+    return render_template("customer/index.html")
+
+
+@bp.route('/guest_join', methods=('GET', 'POST'))
+def guest_join():
+    """Guest customers can join a meeting by entering contact info and meeting details."""
+    return render_template("customer/guest_join.html")

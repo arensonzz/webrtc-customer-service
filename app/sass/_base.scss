@@ -70,3 +70,14 @@ nav .navbar-brand {
 
   position: relative;
 }
+
+.site-entrance-container {
+  .card {
+    flex: 1 1 0;
+  }
+
+  width: min(100%, 600px);
+  display: flex;
+  flex-flow: row nowrap;
+  gap: 10px;
+}

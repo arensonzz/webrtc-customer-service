@@ -12,8 +12,7 @@ from . import socketio
 # Uncomment following line to print DEBUG logs
 #  logging.basicConfig(encoding='utf-8', level=logging.DEBUG)
 
-# Representative is the root blueprint, no url_prefix specified
-bp = Blueprint('representative', __name__)
+bp = Blueprint('representative', __name__, url_prefix="/representative")
 
 
 # ROUTES

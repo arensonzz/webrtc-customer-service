@@ -41,11 +41,12 @@ def create_app(test_config=None):
     socketio.init_app(app)
 
     # Register blueprints
-    from . import (auth, representative)
+    from . import (auth, representative, customer)
     app.register_blueprint(auth.bp)
     app.register_blueprint(representative.bp)
-    # Make representative index the root
-    app.add_url_rule('/', endpoint='representative.index')
+    app.register_blueprint(customer.bp)
+    # Make customer index the root
+    app.add_url_rule('/', endpoint='customer.index')
 
     # A route to test Flask connection
     @app.route('/test')

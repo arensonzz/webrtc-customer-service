@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block navbar_brand_link %}
+{{ url_for("customer.index") }}
+{% endblock %}
+
+{% block title %} Welcome {% endblock %}
+
+{% block main %}
+
+<div class="d-flex flex-column align-items-center justify-content-center">
+  <h1 class="display-4">Welcome!
+  </h1>
+  <p class="lead">Please select the option which best describes you</p>
+
+  <div class="site-entrance-container mt-3">
+    <div class="card text-light bg-secondary">
+      <div class="card-header ">
+        <h1 class="h4 my-1">Customer <i class="fa-solid fa-person-circle-question ms-1"></i></h1>
+
+      </div>
+      <div class="card-body d-flex flex-column align-items-start">
+        <p class="card-text">You came here to have a video conference with the customer service team. </p>
+        <a href="{{ url_for("customer.guest_join") }}" class="btn btn-warning mt-auto">Join a meeting</a>
+      </div>
+    </div>
+
+    <div class="card text-light bg-secondary">
+      <div class="card-header">
+        <h1 class="h4 my-1">Representative <i class="fa-solid fa-headset ms-1"></i></h1>
+
+      </div>
+      <div class="card-body d-flex flex-column align-items-start">
+        <p class="card-text">You work at the customer service team.</p>
+        <a href="{{ url_for("representative.index") }}" class="btn btn-warning mt-auto">Login</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
