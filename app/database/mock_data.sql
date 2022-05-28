@@ -19,13 +19,13 @@ INSERT INTO wcs.customer (email_address, full_name, short_name, phone_country_co
     VALUES ('nyukhnevich4@cargocollective.com', 'Netty Yukhnevich', 'Netty', '90', '5350984700');
 
 INSERT INTO wcs.customer (email_address, full_name, short_name, phone_country_code, phone_number)
-    VALUES ('ahavill5@etsy.com', 'Adelind Havill', 'Adelind', '90', '5350984701');
+    VALUES ('ahavill5@etsy.com', 'Adelind Havill', 'Adelind', '90', '5382354700');
 
 INSERT INTO wcs.customer (email_address, full_name, short_name, phone_country_code, phone_number)
-    VALUES ('soboyle6@businessweek.com', 'Sam O''Boyle', 'Sam', '90', '5350984702');
+    VALUES ('soboyle6@businessweek.com', 'Sam O''Boyle', 'Sam', '90', '5324558588');
 
 INSERT INTO wcs.customer (email_address, full_name, short_name, phone_country_code, phone_number)
-    VALUES ('epoxton7@state.gov', 'Edik Poxton', 'Edik', '90', '5350984703');
+    VALUES ('epoxton7@state.gov', 'Edik Poxton', 'Edik', '90', '5354142020');
 
 INSERT INTO wcs.customer (email_address, full_name, short_name, phone_country_code, phone_number)
     VALUES ('gmcatamney8@tumblr.com', 'Garrett McAtamney', 'Garrett', '90', '5350984704');

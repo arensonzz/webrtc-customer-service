@@ -4,6 +4,7 @@ DROP SCHEMA IF EXISTS wcs CASCADE;
 -- create schema and its tables
 CREATE SCHEMA wcs;
 
+-- case insensitive text
 CREATE EXTENSION IF NOT EXISTS citext WITH SCHEMA wcs;
 
 CREATE TABLE IF NOT EXISTS wcs.customer (
@@ -12,7 +13,7 @@ CREATE TABLE IF NOT EXISTS wcs.customer (
     phone_number text NOT NULL,
     full_name text NOT NULL,
     short_name text NOT NULL, -- how to address the customer
-    email_address citext NOT NULL UNIQUE, -- email address is (in practice) case insensitive
+    email_address citext UNIQUE, -- email address is (in practice) case insensitive
     UNIQUE (phone_country_code, phone_number)
 );
 
@@ -52,10 +53,13 @@ CREATE TABLE IF NOT EXISTS wcs.call_log (
 CREATE TABLE IF NOT EXISTS wcs.meeting_room (
     room_id bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     password text NOT NULL,
-    rep_id bigint,
+    rep_id bigint UNIQUE, -- representative can create at most one room simultaneously
     -- one of the cust_ids will be null
+
     cust_id bigint,
-    g_cust_id bigint
+    g_cust_id bigint,
+    title text not null,
+    description text not null
 );
 
 ALTER TABLE wcs.call_log

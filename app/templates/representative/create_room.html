@@ -7,15 +7,14 @@ Create Room
 {% block main %}
 
 <!-- Create room form -->
-<div class="card create-room-container mx-auto p-2">
+<div class="card bg-light create-room-container mx-auto p-2">
   <div class="card-body">
     <h1 class="h2 card-title text-primary mb-4">Create Room <i class="mx-2 fa-solid fa-people-roof"></i></h1>
     <form action="{{ url_for("representative.create_room") }}" method="post" accept-charset="utf-8">
       <div class="row mb-3">
-        <label for="room_name" class="col-sm-3 col-form-label">Room Name</label>
+        <label for="title" class="col-sm-3 col-form-label">Title</label>
         <div class="col-sm-9">
-          <input autofocus type="text" class="form-control" id="room_name" name="room_name"
-            value="{{ request.form["room_name"] }}">
+          <input type="text" class="form-control" id="title" name="title" value="{{ request.form["title"] }}">
         </div>
       </div>
 
@@ -33,11 +32,56 @@ Create Room
         </div>
       </div>
 
+      <div class="row mb-3">
+        <label for="customerSearch" class="col-sm-3 col-form-label">Customer</label>
+        <div class="col-sm-9">
+          <div class="input-group input-group-sm">
+            <!-- Input box to search customers -->
+            <input type="text" class="form-control" id="customerSearch" placeholder="Start typing...">
+            <!-- Dropdown menu to select according to which column search costumers-->
+            <div class="input-group-text">
+              <select id="searchType" class="form-select form-select-sm"
+                aria-label="Which column to be used for searching customers">
+                <option selected value="full_name">Full name</option>
+                <option value="phone_number">Phone number</option>
+                <option value="cust_id">Customer id</option>
+              </select>
+            </div>
+          </div>
+          <div class="w-100 text-muted my-2 fw-light text-end">Customer list is refreshed with each key press
+          </div>
+          <!-- Select costumer from the dropdown menu -->
+          <div class="w-100">
+            <select id="selectCustomer" name="customer" class="form-select"
+              aria-label="Select customer to create meeting">
+              <option selected value="">Continue without selecting a customer</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
       <div class="d-flex d-md-block ">
         <button type="submit" class="btn btn-primary flex-grow-1">Create</button>
       </div>
     </form>
   </div>
 </div>
+
+<script>
+  let selectCustomer = document.getElementById("selectCustomer");
+  let customerSearch = document.getElementById("customerSearch");
+  let searchType = document.getElementById("searchType")
+  // Fetch customers from database with each key press
+  customerSearch.addEventListener('input', async function() {
+    let response = await fetch('{{ url_for("representative.get_customers") }}' + "?" + searchType.value + "=" +
+      customerSearch.value);
+    let customers = await response.json();
+    let html = '<option selected>Continue without selecting a customer</option>';
+    customers.forEach((customer) => {
+      html += `<option value="${customer["cust_id"]}">${customer["full_name"]}</option>`
+    })
+    selectCustomer.innerHTML = html;
+  });
+</script>
 
 {% endblock %}

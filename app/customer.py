@@ -31,3 +31,9 @@ def request_meeting():
 def join_meeting(id):
     """Customer joins meeting by entering credentials."""
     return render_template("customer/join_meeting.html")
+
+
+@bp.route('/meeting', methods=('GET', 'POST'))
+def meeting():
+    """Page where customer and representative do video chat."""
+    return render_template("customer/meeting.html")
