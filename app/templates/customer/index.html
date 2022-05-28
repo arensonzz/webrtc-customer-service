@@ -20,8 +20,10 @@
 
       </div>
       <div class="card-body d-flex flex-column align-items-start">
-        <p class="card-text">You came here to have a video conference with the customer service team. </p>
-        <a href="{{ url_for("customer.guest_join") }}" class="btn btn-warning mt-auto">Join a meeting</a>
+        <p class="card-text">
+          You came here to open a meeting request with the support team.</p>
+        <a href="{{ url_for("customer.request_meeting") }}" class="btn btn-warning mt-auto">
+          Request a meeting</a>
       </div>
     </div>
 
@@ -32,7 +34,8 @@
       </div>
       <div class="card-body d-flex flex-column align-items-start">
         <p class="card-text">You work at the customer service team.</p>
-        <a href="{{ url_for("representative.index") }}" class="btn btn-warning mt-auto">Login</a>
+        <a href="{{ url_for("representative.index") }}" class="btn btn-warning mt-auto">
+          Login</a>
       </div>
     </div>
   </div>

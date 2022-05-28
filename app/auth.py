@@ -108,6 +108,7 @@ def login():
                     WHERE email_address = %s""", (f["email"].strip(),))
             user = cur.fetchone()
             g.db.commit()
+            cur.close()
 
             if user is None:
                 is_bad_login = True

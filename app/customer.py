@@ -21,7 +21,13 @@ def index():
     return render_template("customer/index.html")
 
 
-@bp.route('/guest_join', methods=('GET', 'POST'))
-def guest_join():
-    """Guest customers can join a meeting by entering contact info and meeting details."""
-    return render_template("customer/guest_join.html")
+@bp.route('/request-meeting', methods=('GET', 'POST'))
+def request_meeting():
+    """Customers can request a meeting with the support team."""
+    return render_template("customer/request_meeting.html")
+
+
+@bp.route('/join-meeting/<int:id>', methods=('GET', 'POST'))
+def join_meeting(id):
+    """Customer joins meeting by entering credentials."""
+    return render_template("customer/join_meeting.html")

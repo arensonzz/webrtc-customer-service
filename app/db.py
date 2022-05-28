@@ -1,5 +1,5 @@
 import psycopg2
-from psycopg2.extras import DictCursor
+from psycopg2.extras import DictCursor, RealDictCursor
 
 import click
 from flask import current_app, g
@@ -19,7 +19,7 @@ def get_db():
             port=current_app.config['DB_PORT'],
         )
 
-    return g.db.cursor(cursor_factory=DictCursor)
+    return g.db.cursor(cursor_factory=RealDictCursor)
 
 
 def close_db(e=None):
