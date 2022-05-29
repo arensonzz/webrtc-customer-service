@@ -19,6 +19,7 @@ bp = Blueprint('customer', __name__)
 @bp.route('/', methods=('GET',))
 def index():
     """Index page that contains links to each user type's interfaces."""
+    # Redirect logged in representatives to representative index page
     if "rep_id" in session:
         return redirect(url_for("representative.index"))
     return render_template("customer/index.html")
