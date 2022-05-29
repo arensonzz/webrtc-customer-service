@@ -7,12 +7,15 @@
 </button>
 
 <div class="collapse navbar-collapse" id="navbar">
-  {% if session["user_id"] %}
+  {% if session["rep_id"] %}
   <ul class="navbar-nav me-auto mt-2">
 
     <li class="nav-item"><a class="nav-link" href="{{ url_for("representative.create_room") }}">Create Room</a>
     </li>
-    <li class="nav-item"><a class="nav-link" href="{{ url_for("representative.join_room") }}">Join Room</a></li>
+    {% if session["room_id"] %}
+    <li class="nav-item"><a class="nav-link" href="{{ url_for("customer.meeting") }}">Go back to meeting</a></li>
+
+    {% endif %}
   </ul>
   <ul class="navbar-nav ms-auto mt-2">
     <li class="nav-item"><a class="nav-link" href="{{ url_for("auth.logout") }}">Log Out</a></li>

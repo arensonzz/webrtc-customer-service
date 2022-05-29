@@ -77,17 +77,17 @@ def create_room():
                 if f.get("customer"):
                     cur.execute("""INSERT INTO wcs.meeting_room (password, rep_id, cust_id, 
                         title, description) VALUES (%s, %s, %s, %s, %s)""",
-                                (generate_password_hash(f["password"]), session["user_id"],
+                                (generate_password_hash(f["password"]), session["rep_id"],
                                  f.get("customer"), f["title"].strip(), f["description"].strip()))
                 else:
                     cur.execute("""INSERT INTO wcs.meeting_room (password, rep_id, 
                         title, description) VALUES (%s, %s, %s, %s)""",
-                                (generate_password_hash(f["password"]), session["user_id"],
+                                (generate_password_hash(f["password"]), session["rep_id"],
                                  f["title"].strip(), f["description"].strip()))
 
                 g.db.commit()
                 cur.execute("SELECT room_id FROM wcs.meeting_room WHERE rep_id = %s",
-                            (session["user_id"],))
+                            (session["rep_id"],))
                 g.db.commit()
                 room = cur.fetchone()
                 if room:

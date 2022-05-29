@@ -7,8 +7,9 @@ Login
 {% block main %}
 <!-- Login form -->
 
-<div class="container text-center test-sass">
-  <h1 class="text-primary mb-4">Log In</h1>
+<div class="container text-center">
+  <h1 class="text-primary mb-0 h2">Log In</h1>
+  <div class="small mb-4 text-muted">Customer support team only</div>
   <div class="mx-auto form-container">
     <form action="{{ url_for("auth.login") }}" method="post" accept-charset="utf-8">
       <div class="mb-3">

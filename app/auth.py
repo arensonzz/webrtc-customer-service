@@ -19,8 +19,21 @@ def login_required(view):
     """Decorator to redirect unauthenticated representatives back to login page."""
     @functools.wraps(view)
     def wrapped_view(**kwargs):
-        if "user_id" not in session:
+        if "rep_id" not in session:
+            flash("You must first login to access that page.", "warning")
             return redirect(url_for('auth.login'))
+        return view(**kwargs)
+
+    return wrapped_view
+
+
+def customer_required(view):
+    """Decorator to redirect representatives back to index page."""
+    @functools.wraps(view)
+    def wrapped_view(**kwargs):
+        if "rep_id" in session:
+            flash("The route you tried to access is for customers only.", "warning")
+            return redirect(url_for('representative.index'))
         return view(**kwargs)
 
     return wrapped_view
@@ -28,13 +41,13 @@ def login_required(view):
 
 def load_logged_in_user():
     """Return dict of logged in representative's informations."""
-    user_id = session["user_id"]
+    rep_id = session["rep_id"]
     user = None
 
-    if user_id is not None:
+    if rep_id is not None:
         with get_db() as cur:
             cur.execute("SELECT * FROM wcs.representative WHERE rep_id = %s",
-                        (user_id,))
+                        (rep_id,))
             user = cur.fetchone()
             g.db.commit()
 
@@ -45,6 +58,10 @@ def load_logged_in_user():
 @bp.route('/register', methods=('GET', 'POST'))
 def register():
     """Register representative to database."""
+    # Redirect to index page if user is logged in
+    if "rep_id" in session:
+        return redirect(url_for("representative.index"))
+
     errors = {}
     if request.method == 'POST':
         f = request.form
@@ -87,7 +104,7 @@ def register():
 def login():
     """Log in representative by adding to session."""
     # Redirect to index page if user is already logged in
-    if "user_id" in session:
+    if "rep_id" in session:
         return redirect(url_for("representative.index"))
 
     errors = {}
@@ -123,7 +140,7 @@ def login():
                 # Add the user info to session
                 # User stays logged in this way
                 session.clear()
-                session["user_id"] = user["rep_id"]
+                session["rep_id"] = user["rep_id"]
                 return redirect(url_for("representative.index"))
     return render_template('auth/login.html', errors=errors)
 

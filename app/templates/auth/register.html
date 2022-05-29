@@ -8,19 +8,19 @@ Register
 <!-- Register form -->
 
 <div class="container text-center">
-  <h1 class="text-primary mb-4">Create Account</h1>
+  <h1 class="text-primary mb-0 h2">Create Account</h1>
+  <div class="small mb-4 text-muted">Customer support team only</div>
   <div class="mx-auto form-container">
     <form action="{{ url_for("auth.register") }}" method="post" accept-charset="utf-8">
-      <p class="text-muted"><small>Fields marked with asterisk (*) are required</small></p>
       <div class="mb-3">
-        <label for="email" class="form-label">Email Address*</label>
+        <label for="email" class="form-label">Email Address</label>
         <input autofocus type="text" class="form-control" id="email" name="email" value="{{ request.form["email"] }}">
         {% if errors["email"] %}
         <p class="text-danger mt-1">{{ errors["email"] }}</p>
         {% endif %}
       </div>
       <div class="mb-3">
-        <label for="password" class="form-label">Password*</label>
+        <label for="password" class="form-label">Password</label>
         <input type="password" class="form-control" id="password" name="password"
           value="{{ request.form["password"] }}">
         {% if errors["password"] %}
@@ -28,7 +28,7 @@ Register
         {% endif %}
       </div>
       <div class="mb-3">
-        <label for="confirmation" class="form-label">Repeat*</label>
+        <label for="confirmation" class="form-label">Repeat</label>
         <input type="password" class="form-control" id="confirmation" name="confirmation">
         {% if errors["confirmation"] %}
         <p class="text-danger mt-1">{{ errors["confirmation"] }}</p>
@@ -39,7 +39,7 @@ Register
         <input type="text" class="form-control" id="full_name" name="full_name" value="{{ request.form["full_name"] }}">
       </div>
       <div class="mb-3">
-        <label for="short_name" class="form-label">Short Name*</label>
+        <label for="short_name" class="form-label">Short Name</label>
         <input type="text" class="form-control" id="short_name" name="short_name"
           value="{{ request.form["short_name"] }}">
         {% if errors["short_name"] %}

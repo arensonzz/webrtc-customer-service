@@ -1,12 +1,44 @@
 {% extends "base.html" %}
 
 {% block navbar_brand_link %}
-#
+    {% if session["rep_id"] %}
+        {{ url_for("representative.index") }}
+    {% endif %}
 {% endblock %}
 
-{% block title %} Meeting {% endblock %}
+{% block title %} Meeting {{ session["room_id"] }} {% endblock %}
 
 {% block main %}
 
-TODO
+<button type="button" class="btn btn-primary" id="leaveButton">Leave meeting</button>
+
+<script charset="utf-8">
+  // Put these JavaScript codes to the HTML file of the route
+  // you want socket connections to happen.
+  const socket = io("/meeting");
+  leaveButton = document.getElementById("leaveButton");
+  // Emit joined event to inform other users in the room
+  socket.on("connect", () => {
+    socket.emit("joined", {});
+    console.log("SocketIO: Connected to server");
+  });
+  // Leave room by clicking the button
+  function leaveRoom() {
+    socket.emit("leave", {}, () => {
+      socket.disconnect();
+      window.location.href = '{{ url_for("customer.leave_meeting") }}';
+    });
+  }
+  leaveButton.addEventListener("click", () => {
+    isLeave = confirm("Do you want to leave the meeting?");
+    if (isLeave) {
+      leaveRoom();
+    }
+  });
+  // Leave room before leaving page
+  /* window.onbeforeunload = () => {
+    leaveRoom();
+    return "Do you want to leave chat?";
+  }; */
+</script>
 {% endblock %}
