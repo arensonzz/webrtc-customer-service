@@ -7,9 +7,11 @@ Create Room
 {% block main %}
 
 <!-- Create room form -->
-<div class="card bg-light create-room-container mx-auto p-2">
+<div class="card bg-light create-room-container mx-auto">
+  <div class="card-header">
+    <h1 class="h2 card-title text-primary mb-0">New Meeting <i class="mx-2 fa-solid fa-user-group"></i></h1>
+  </div>
   <div class="card-body">
-    <h1 class="h2 card-title text-primary mb-4">New Meeting <i class="mx-2 fa-solid fa-user-group"></i></h1>
     <form action="{{ url_for("representative.create_room") }}" method="post" accept-charset="utf-8">
       <div class="row mb-3">
         <label for="title" class="col-sm-3 col-form-label">Title</label>

@@ -8,5 +8,32 @@
 
 {% block main %}
 
-TODO
+<!-- Join meeting form -->
+<div class="card bg-light join-meeting-container mx-auto">
+  <div class="card-header">
+    <h1 class="h2 card-title text-primary mb-0">Join Meeting<i class="mx-2 small fa-solid fa-right-to-bracket"></i></h1>
+  </div>
+  <div class="card-body">
+    <form action="{{ url_for("customer.join_meeting", id=g.room_id) }}" method="post" accept-charset="utf-8">
+      <div class="row mb-3">
+        <label for="phone_number" class="col-sm-3 col-form-label">Phone number</label>
+        <div class="col-sm-9">
+          <input type="tel" pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}" class="form-control" id="phone_number"
+            name="phone_number" value="{{ request.form["phone_number"] }}">
+        </div>
+      </div>
+
+      <div class="row mb-3">
+        <label for="password" class="col-sm-3 col-form-label">Password</label>
+        <div class="col-sm-9">
+          <input type="password" class="form-control" id="password" name="password">
+        </div>
+      </div>
+
+      <div class="d-flex d-md-block ">
+        <button type="submit" class="btn btn-primary flex-grow-1">Join</button>
+      </div>
+    </form>
+  </div>
+</div>
 {% endblock %}

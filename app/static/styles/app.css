@@ -148,3 +148,7 @@ nav .navbar-brand {
 .login-card {
   width: min(100%, 420px);
 }
+
+.join-meeting-container {
+  max-width: 800px;
+}

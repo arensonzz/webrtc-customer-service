@@ -35,6 +35,26 @@ def request_meeting():
 @customer_required
 def join_meeting(id):
     """Customer joins meeting by entering credentials."""
+    cur = get_db()
+
+    # Remember the dynamic id to access from the HTML
+    if "room_id" not in g:
+        g.room_id = id
+
+    # Get the customer info from the room record if not guest customer
+    if "cust_id" not in session and "is_guest_customer" not in session:
+        cur.execute("""SELECT cust_id FROM wcs.meeting_room WHERE room_id = %s""",
+                    (id,))
+        cust_id = cur.fetchone()
+        g.db.commit()
+        if cust_id is not None:
+            session["cust_id"] = cust_id
+        else:
+            session["is_guest_customer"] = True
+
+    if request.method == "POST":
+        pass
+
     return render_template("customer/join_meeting.html")
 
 

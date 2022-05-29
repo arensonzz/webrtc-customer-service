@@ -106,17 +106,6 @@ def create_room():
     return render_template("representative/create_room.html")
 
 
-@bp.route('/join-room', methods=('GET', 'POST'))
-@login_required
-def join_room():
-    """Let representative join meeting rooms created by him/her."""
-    if request.method == "POST":
-        cur = get_db()
-        f = request.form
-
-    return render_template("representative/join_room.html")
-
-
 @bp.route('/leave-room')
 @login_required
 def leave_chat():
