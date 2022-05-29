@@ -29,6 +29,7 @@
   <header>
     <nav class="bg-light border navbar navbar-expand-md navbar-light">
       <div class="container-fluid">
+        <!-- Pages can ovewrite default navbar brand href -->
         <a class="navbar-brand text-primary"
           href="{% block navbar_brand_link %} {{ url_for("representative.index") }} {% endblock %}">
           <i class="fa-solid fa-headset"></i>
@@ -50,7 +51,8 @@
   {% endif %}
   {% endwith %}
 
-  <main class="container-fluid py-5">
+  <!-- Main block where each page has its own content -->
+  <main class="py-5">
     {% block main %}{% endblock %}
   </main>
 

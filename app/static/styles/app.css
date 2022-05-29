@@ -129,54 +129,10 @@ nav .navbar-brand {
 
 .form-container {
   text-align: left;
-  max-width: 400px;
 }
 
 .create-room-container {
   max-width: 800px;
-}
-
-.message-container {
-  height: 500px;
-}
-
-.message-info,
-.message-text {
-  font-size: 0.9rem;
-}
-
-.dialog-box {
-  position: relative;
-}
-.dialog-box .arrow {
-  display: inline-block;
-  width: 12px;
-  height: 20px;
-  overflow: hidden;
-  position: absolute;
-  float: left;
-  bottom: 3px;
-  left: -10px;
-}
-.dialog-box .arrow .inner {
-  width: 0;
-  height: 0;
-  border-right: 20px solid #fff;
-  border-top: 10px solid transparent;
-  border-bottom: 10px solid transparent;
-  position: absolute;
-  top: 0;
-  left: 2px;
-}
-.dialog-box .arrow .outer {
-  width: 0;
-  height: 0;
-  border-right: 20px solid #dee2e6;
-  border-top: 10px solid transparent;
-  border-bottom: 10px solid transparent;
-  position: absolute;
-  top: 0;
-  left: 0;
 }
 
 .site-entrance-container {
@@ -187,4 +143,8 @@ nav .navbar-brand {
 }
 .site-entrance-container .card {
   flex: 1 1 0;
+}
+
+.login-card {
+  width: min(100%, 420px);
 }
