@@ -32,28 +32,45 @@ def request_meeting():
     return render_template("customer/request_meeting.html")
 
 
+@bp.route('/guest-entry', methods=('POST',))
+@customer_required
+def guest_entry():
+    """Registers the guest customer and checks the entered room password."""
+    f = request.form
+    cur = get_db()
+
+    if "is_guest" not in g:
+        flash("You are not authorized to access that page.")
+        return redirect(url_for("customer.index"))
+    # TODO
+
+
 @bp.route('/join-meeting/<int:id>', methods=('GET', 'POST'))
 @customer_required
 def join_meeting(id):
-    """Customer joins meeting by entering credentials."""
+    """Customer joins meeting by entering password."""
     cur = get_db()
+    cust_id = None
 
     # Remember the dynamic id to access from the HTML
     if "room_id" not in g:
         g.room_id = id
+    # Remember the customer type
+    if "is_guest" not in g:
+        g.is_guest = False
 
     # Get the customer info from the room record if not guest customer
-    if "cust_id" not in session and "is_guest_customer" not in session:
+    if "cust_id" not in session and not g.is_guest:
         cur.execute("""SELECT cust_id FROM wcs.meeting_room WHERE room_id = %s""",
                     (id,))
         cust_id = cur.fetchone()
         g.db.commit()
-        if cust_id is not None:
-            session["cust_id"] = cust_id
-        else:
-            session["is_guest_customer"] = True
+        # Declare as guest customer
+        if cust_id is None:
+            g.is_guest = True
 
     if request.method == "POST":
+        # TODO
         pass
 
     return render_template("customer/join_meeting.html")

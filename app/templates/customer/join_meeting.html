@@ -14,26 +14,74 @@
     <h1 class="h2 card-title text-primary mb-0">Join Meeting<i class="mx-2 small fa-solid fa-right-to-bracket"></i></h1>
   </div>
   <div class="card-body">
-    <form action="{{ url_for("customer.join_meeting", id=g.room_id) }}" method="post" accept-charset="utf-8">
-      <div class="row mb-3">
-        <label for="phone_number" class="col-sm-3 col-form-label">Phone number</label>
-        <div class="col-sm-9">
-          <input type="tel" pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}" class="form-control" id="phone_number"
-            name="phone_number" value="{{ request.form["phone_number"] }}">
+    {% if g.is_guest %}
+    <!-- Guest customer form -->
+    <form action="{{ url_for("customer.guest_entry") }}" method="post" accept-charset="utf-8">
+      <div class="border-bottom">
+        <h2 class="h4">Guest Contact Form</h2>
+        <div class="row mb-3">
+          <p class="text-muted">Please fill phone number or email address fields for us to be able to contact you later.
+          </p>
+          <div class="col-sm-6">
+            <label for="phone_number" class="">Phone number</label>
+            <input type="tel" pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}" class="form-control" id="phone_number"
+              name="phone_number" value="{{ request.form["phone_number"] }}">
+          </div>
+          <div class="col-sm-6">
+            <label for="email">Email address</label>
+            <input placeholder="username@example.com" type="text" class="form-control" id="email" name="email"
+              value="{{ request.form["email"] }}">
+          </div>
+        </div>
+
+        <div class="mb-3 col-sm-6 pe-2">
+          <div class="d-flex flex-nowrap gap-2">
+            <label for="short_name" class="col-form-label">Name</label>
+            <p class="col-form-label text-muted ms-auto">How do you want to be called? </p>
+          </div>
+          <input type="text" class="form-control" id="short_name" name="short_name" placeholder="e.g. John">
         </div>
       </div>
 
-      <div class="row mb-3">
-        <label for="password" class="col-sm-3 col-form-label">Password</label>
-        <div class="col-sm-9">
-          <input type="password" class="form-control" id="password" name="password">
-        </div>
+      <h2 class="h4 mt-3">Room Information</h2>
+      <p class="text-muted">Enter the password that was sent to you along with the meeting link.</p>
+      <div class="mb-3 col-sm-6 pe-2">
+        <label for="password" class="col-form-label">Password</label>
+        <input type="password" class="form-control" id="password" name="password">
       </div>
 
       <div class="d-flex d-md-block ">
         <button type="submit" class="btn btn-primary flex-grow-1">Join</button>
       </div>
     </form>
+
+    {% else %}
+    <!-- Customer form -->
+    <form action="{{ url_for("customer.join_meeting", id=g.room_id) }}" method="post" accept-charset="utf-8">
+      <div class="border-bottom">
+        <h2 class="h4">Customer Validation</h2>
+        <p class="text-muted">Please enter your phone number that is registered to the company.
+        </p>
+        <div class="col-sm-6 mb-3 pe-2">
+          <label for="phone_number" class="">Phone number</label>
+          <input type="tel" pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}" class="form-control" id="phone_number"
+            name="phone_number" value="{{ request.form["phone_number"] }}">
+        </div>
+      </div>
+
+      <h2 class="h4 mt-3">Room Information</h2>
+      <p class="text-muted">Enter the password that was sent to you along with the meeting link.</p>
+      <div class="mb-3 col-sm-6 pe-2">
+        <label for="password" class="col-form-label">Password</label>
+        <input type="password" class="form-control" id="password" name="password">
+      </div>
+
+      <div class="d-flex d-md-block">
+        <button type="submit" class="btn btn-primary flex-grow-1">Join</button>
+      </div>
+    </form>
+
+    {% endif %}
   </div>
 </div>
 {% endblock %}
