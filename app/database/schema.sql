@@ -9,12 +9,10 @@ CREATE EXTENSION IF NOT EXISTS citext WITH SCHEMA wcs;
 
 CREATE TABLE IF NOT EXISTS wcs.customer (
     cust_id bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-    phone_country_code text NOT NULL,
-    phone_number text NOT NULL,
+    phone_number text NOT NULL UNIQUE, -- phone numbers are stored in E.164 standard
     full_name text NOT NULL,
     short_name text NOT NULL, -- how to address the customer
-    email_address citext UNIQUE, -- email address is (in practice) case insensitive
-    UNIQUE (phone_country_code, phone_number)
+    email_address citext UNIQUE -- email address is (in practice) case insensitive
 );
 
 CREATE TABLE IF NOT EXISTS wcs.guest_customer (
@@ -22,11 +20,9 @@ CREATE TABLE IF NOT EXISTS wcs.guest_customer (
     -- guest_customer must enter phone_number or email_address when joining a room
     -- this info is stored to be able to contact guest_customer later
 
-    phone_country_code text,
-    phone_number text,
+    phone_number text UNIQUE, -- phone numbers are stored in E.164 standard
     email_address citext UNIQUE, -- email address is (in practice) case insensitive
-    short_name text NOT NULL, -- how to address the customer
-    UNIQUE (phone_country_code, phone_number)
+    short_name text NOT NULL -- how to address the customer
 );
 
 CREATE TABLE IF NOT EXISTS wcs.representative (
@@ -58,8 +54,8 @@ CREATE TABLE IF NOT EXISTS wcs.meeting_room (
 
     cust_id bigint,
     g_cust_id bigint,
-    title text not null,
-    description text not null
+    title text NOT NULL,
+    description text NOT NULL
 );
 
 ALTER TABLE wcs.call_log

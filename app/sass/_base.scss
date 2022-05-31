@@ -1,6 +1,13 @@
 // Import fonts
 @use "fonts";
 
+// Import intl-tel-input flags
+.iti__flag { background-image: url("/static/intl-tel-input/img/flags.png"); }
+
+@media (min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .iti__flag { background-image: url("/static/intl-tel-input/img/flags@2x.png"); }
+}
+
 * {
   font-family: Poppins, sans-serif;
 }

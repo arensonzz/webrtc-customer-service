@@ -35,14 +35,14 @@ Create Room
       </div>
 
       <div class="row mb-3">
-        <label for="customerSearch" class="col-sm-3 col-form-label">Customer</label>
+        <label for="customer_search" class="col-sm-3 col-form-label">Customer</label>
         <div class="col-sm-9">
           <div class="input-group input-group-sm">
             <!-- Input box to search customers -->
-            <input type="text" class="form-control" id="customerSearch" placeholder="Start typing...">
+            <input type="text" class="form-control" id="customer_search" placeholder="Start typing...">
             <!-- Dropdown menu to select according to which column search costumers-->
             <div class="input-group-text">
-              <select id="searchType" class="form-select form-select-sm"
+              <select id="search_type" class="form-select form-select-sm"
                 aria-label="Which column to be used for searching customers">
                 <option selected value="full_name">Full name</option>
                 <option value="phone_number">Phone number</option>
@@ -54,7 +54,7 @@ Create Room
           </div>
           <!-- Select costumer from the dropdown menu -->
           <div class="w-100">
-            <select id="selectCustomer" name="customer" class="form-select"
+            <select id="select_customer" name="customer" class="form-select"
               aria-label="Select customer to create meeting">
               <option selected value="">Continue without selecting a customer</option>
             </select>
@@ -70,9 +70,9 @@ Create Room
 </div>
 
 <script>
-  let selectCustomer = document.getElementById("selectCustomer");
-  let customerSearch = document.getElementById("customerSearch");
-  let searchType = document.getElementById("searchType")
+  let selectCustomer = document.getElementById("select_customer");
+  let customerSearch = document.getElementById("customer_search");
+  let searchType = document.getElementById("search_type")
   // Fetch customers from database with each key press
   customerSearch.addEventListener('input', async function() {
     let response = await fetch('{{ url_for("representative.get_customers") }}' + "?" + searchType.value + "=" +
