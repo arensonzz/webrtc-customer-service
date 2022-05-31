@@ -11,23 +11,27 @@
 <!-- Join meeting form -->
 <div class="card bg-light join-meeting-container mx-auto">
   <div class="card-header">
-    <h1 class="h2 card-title text-primary mb-0">Join Meeting<i class="mx-2 small fa-solid fa-right-to-bracket"></i></h1>
+    <h1 class="h2 card-title text-primary mb-0">Join Meeting</h1>
   </div>
-  <div class="card-body">
+  <div class="card-body p-0">
     {% if g.is_guest %}
     <!-- Guest customer form -->
     <form action="{{ url_for("customer.join_meeting", id=g.room_id)}}" method="post" accept-charset="utf-8"
       id="join_meeting_form">
-      <div class="border-bottom">
-        <h2 class="h4">Guest Contact Form</h2>
-        <div class="row mb-3">
-          <p class="text-muted">Please fill phone number or email address fields for us to be able to contact you later.
+      <h2 class="h5 mb-2 card-header rounded-top">Guest Contact Form</h2>
+      <div class="p-2 px-4">
+        <div class="row mb-4">
+          <p class="text-muted small">Please fill either phone number or email address fields for us to be able to
+            contact you
+            later.
           </p>
-          <div class="col-sm-6">
+          <div class="col-sm-6 mb-2 mb-sm-0">
             <label for="phone_number" class="">Phone number</label>
-            <input type="tel" class="form-control" id="phone_number" name="phone_number"
-              value="{{ request.form["phone_number"] }}">
-            <p id="phone_validation" class="text-danger mt-1 small d-none">Phone number is not correctly formatted</p>
+            <input type="tel" class="form-control {{ errors["phone_number_check"] }}" id="phone_number"
+              name="phone_number" value="{{ request.form["phone_number"] }}">
+            {% if errors["phone_number_check"] %}
+            <p class="text-danger mt-1 small">Phone number is not correctly formatted</p>
+            {% endif %}
           </div>
           <div class="col-sm-6">
             <label for="email">Email address</label>
@@ -42,8 +46,8 @@
 
         <div class="mb-3 col-sm-6 pe-2">
           <div class="d-flex flex-nowrap gap-2">
-            <label for="short_name" class="col-form-label">Name</label>
-            <p class="col-form-label text-muted ms-auto">How do you want to be called? </p>
+            <label for="short_name">Name</label>
+            <div class="text-muted ms-auto">How do you want to be called? </div>
           </div>
           <input type="text" class="form-control {{ errors["short_name"] }}" id="short_name" name="short_name"
             placeholder="e.g. John" value="{{ request.form["short_name"] }}">
@@ -51,16 +55,18 @@
         </div>
       </div>
 
-      <h2 class="h4 mt-3">Room Information</h2>
-      <p class="text-muted">Enter the password that was sent to you along with the meeting link.</p>
-      <div class="mb-3 col-sm-6 pe-2">
-        <label for="password" class="col-form-label">Password</label>
-        <input type="password" class="form-control {{ errors["password"] }}" id="password" name="password">
-        <div class="invalid-feedback">Password is required</div>
-      </div>
+      <h2 class="h5 mb-2 card-header rounded-top">Room Information</h2>
+      <div class="p-2 px-4">
+        <p class="text-muted small">Enter the password that was sent to you along with the meeting link.</p>
+        <div class="mb-3 col-sm-6 pe-2">
+          <label for="password">Password</label>
+          <input type="password" class="form-control {{ errors["password"] }}" id="password" name="password">
+          <div class="invalid-feedback">Password is required</div>
+        </div>
 
-      <div class="d-flex d-md-block ">
-        <button type="submit" class="btn btn-primary flex-grow-1">Join</button>
+        <div class="d-flex d-md-block ">
+          <button type="submit" class="btn btn-primary flex-grow-1">Join</button>
+        </div>
       </div>
     </form>
 
@@ -68,31 +74,34 @@
     <!-- Customer form -->
     <form action="{{ url_for("customer.join_meeting", id=g.room_id) }}" method="post" accept-charset="utf-8"
       id="join_meeting_form">
-      <div class="border-bottom">
-        <h2 class="h4">Customer Validation</h2>
-        <p class="text-muted">Please enter your phone number that is registered to the company.
+      <h2 class="h6 card-header">Customer Validation</h2>
+      <div class="p-3 px-4">
+        <p class="text-muted small">Please enter your phone number that is registered to the company.
         </p>
         <div class="col-sm-6 mb-3 pe-2">
           <label for="phone_number" class="">Phone number</label>
-          <input type="tel" class="form-control {{ errors["phone_number"] }}" id="phone_number" name="phone_number"
-            value="{{ request.form["phone_number"] }}">
+          <input type="tel" class="form-control {{ errors["phone_number"] }} {{ errors["phone_number_check"] }}"
+            id="phone_number" name="phone_number" value="{{ request.form["phone_number"] }}">
           {% if errors["phone_number"] %}
-          <p id="phone_required" class="text-danger mt-1 small">Phone number is required</p>
+          <p class="text-danger mt-1 small">Phone number is required</p>
+          {% elif errors["phone_number_check"] %}
+          <p class="text-danger mt-1 small">Phone number is not correctly formatted</p>
           {% endif %}
-          <p id="phone_validation" class="text-danger mt-1 small d-none">Phone number is not correctly formatted</p>
         </div>
       </div>
 
-      <h2 class="h4 mt-3">Room Information</h2>
-      <p class="text-muted">Enter the password that was sent to you along with the meeting link.</p>
-      <div class="mb-3 col-sm-6 pe-2">
-        <label for="password" class="col-form-label">Password</label>
-        <input type="password" class="form-control {{ errors["password"] }}" id="password" name="password">
-        <div class="invalid-feedback">Password is required</div>
-      </div>
+      <h2 class="h6 card-header">Room Information</h2>
+      <div class="p-3 px-4">
+        <p class="text-muted small">Enter the password that was sent to you along with the meeting link.</p>
+        <div class="mb-3 col-sm-6 pe-2">
+          <label for="password">Password</label>
+          <input type="password" class="form-control {{ errors["password"] }}" id="password" name="password">
+          <div class="invalid-feedback">Password is required</div>
+        </div>
 
-      <div class="d-flex d-md-block">
-        <button type="submit" class="btn btn-primary flex-grow-1">Join</button>
+        <div class="d-flex d-md-block">
+          <button type="submit" class="btn btn-primary flex-grow-1">Join</button>
+        </div>
       </div>
     </form>
 
@@ -113,22 +122,8 @@
     preferredCountries: ["tr", "us", "gb", "de", "az", "uz", "kz", "tm"]
   });
   form.addEventListener("submit", (event) => {
-    // Only validate phone number if not empty
-    if (phoneNumber.value) {
-      if (!iti.isValidNumber()) {
-        event.preventDefault();
-        event.stopPropagation();
-        document.getElementById("phone_validation").classList.remove('d-none');
-        phoneNumber.classList.add("is-invalid");
-      } else {
-        phoneNumber.value = iti.getNumber();
-        document.getElementById("phone_validation").classList.add('d-none');
-        document.getElementById("phone_required").classList.add('d-none')
-        phoneNumber.classList.remove("is-invalid");
-      }
-    } else {
-      document.getElementById("phone_validation").classList.add('d-none');
-      phoneNumber.classList.remove("is-invalid");
+    if (iti.isValidNumber()) {
+      phoneNumber.value = iti.getNumber();
     }
   });
 </script>

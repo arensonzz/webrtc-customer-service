@@ -8,7 +8,8 @@ import logging
 from app.db import get_db
 from flask_socketio import emit, leave_room, join_room as flask_join_room
 from . import socketio
-from .helpers import get_guest_customer
+from .helpers import get_guest_customer, is_phone_valid, get_customer
+
 
 # Uncomment following line to print DEBUG logs
 #  logging.basicConfig(encoding='utf-8', level=logging.DEBUG)
@@ -77,6 +78,9 @@ def join_meeting(id):
             # Check for required fields
             if not f["email"] and not f["phone_number"]:
                 errors["contact_info"] = "Either email address or phone number must be entered"
+            # Validate phone number
+            elif not is_phone_valid(f["phone_number"]):
+                errors["phone_number_check"] = "is-invalid"
             if not f["short_name"]:
                 errors["short_name"] = "is-invalid"
             if not f["password"]:
@@ -105,6 +109,7 @@ def join_meeting(id):
                 cur.execute("""UPDATE wcs.meeting_room SET g_cust_id = %s WHERE room_id = %s""",
                             (guest_customer["g_cust_id"], g.room_id))
                 g.db.commit()
+                # Correct inputs
                 # Update session
                 session["room_id"] = g.room_id
                 session["g_cust_id"] = guest_customer["g_cust_id"]
@@ -116,6 +121,9 @@ def join_meeting(id):
             # Check for required fields
             if not f["phone_number"]:
                 errors["phone_number"] = "is-invalid"
+            # Validate phone number
+            elif not is_phone_valid(f["phone_number"]):
+                errors["phone_number_check"] = "is-invalid"
             if not f["password"]:
                 errors["password"] = "is-invalid"
 
@@ -124,7 +132,17 @@ def join_meeting(id):
                 if not check_password_hash(room["password"], f["password"]):
                     flash("Password is incorrect.", "warning")
                     return render_template("customer/join_meeting.html", errors=errors)
-                print("Number:", f["phone_number"])
+
+                customer = get_customer(room["cust_id"])
+                if customer["phone_number"] != f["phone_number"]:
+                    flash("Phone number is incorrect.", "warning")
+                    return render_template("customer/join_meeting.html", errors=errors)
+                # Correct inputs
+                # Update session
+                session["room_id"] = g.room_id
+                session["cust_id"] = customer["cust_id"]
+                session["is_guest"] = False
+                return redirect(url_for("customer.meeting"))
 
     return render_template("customer/join_meeting.html", errors=errors)
 

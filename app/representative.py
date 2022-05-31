@@ -35,7 +35,7 @@ def get_customers():
                 ILIKE %s ESCAPE ''""", (str_surround(full_name),))
     elif phone_number:
         cur.execute("""SELECT * FROM wcs.customer WHERE phone_number
-                ILIKE %s ESCAPE ''""", (str_surround(phone_number, start=False),))
+                ILIKE %s ESCAPE ''""", (str_surround(phone_number),))
     elif cust_id:
         cur.execute("""SELECT * FROM wcs.customer WHERE cust_id
                 = %s""", (cust_id,))
