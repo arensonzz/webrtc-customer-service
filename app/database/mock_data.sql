@@ -62,3 +62,12 @@ INSERT INTO wcs.meeting_room ("password", "rep_id", "title", "description")
             WHERE
                 full_name = 'Illa Rennebach'), 'Room With Guest', 'Room description with guest');
 
+INSERT INTO wcs.meeting_room ("password", "rep_id", "title", "description")
+    VALUES ('pbkdf2:sha256:260000$3aIZDCHQLv5OgReF$49961503ad05d6a7d1eeba8f56e5b48c1940b1fd3efe1d8a806b1d6ce7935700', (
+            SELECT
+                rep_id
+            FROM
+                wcs.representative
+            WHERE
+                full_name = 'Arin Luxen'), 'Room With Guest 2', 'Room description with guest 2');
+

@@ -73,6 +73,7 @@ def create_room():
 
         if not has_error:
             try:
+                # TODO: refactor NULL insert
                 # If customer is not selected insert NULL to cust_id in the database
                 if f.get("customer"):
                     cur.execute("""INSERT INTO wcs.meeting_room (password, rep_id, cust_id, 

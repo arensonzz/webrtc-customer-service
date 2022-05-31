@@ -1,3 +1,4 @@
+from .auth import customer_required
 from flask import (
     Blueprint, flash, g, redirect, render_template, request, session, url_for, Markup
 )
@@ -7,7 +8,7 @@ import logging
 from app.db import get_db
 from flask_socketio import emit, leave_room, join_room as flask_join_room
 from . import socketio
-from .auth import customer_required
+from .helpers import get_guest_customer
 
 # Uncomment following line to print DEBUG logs
 #  logging.basicConfig(encoding='utf-8', level=logging.DEBUG)
@@ -32,31 +33,6 @@ def request_meeting():
     return render_template("customer/request_meeting.html")
 
 
-@bp.route('/guest-entry/<room_id>/<is_guest>', methods=('POST',))
-@customer_required
-def guest_entry(room_id, is_guest):
-    """Registers the guest customer and checks the entered room password."""
-    f = request.form
-    cur = get_db()
-    errors = {}
-
-    if not is_guest:
-        flash("You are not authorized to access that page.", "warning")
-        return redirect(url_for("customer.index"))
-
-    if not f["email"] and not f["phone_number"]:
-        errors["contact_info"] = "Either email address or phone number must be entered"
-    if not f["short_name"]:
-        errors["short_name"] = "is-invalid"
-    if not f["password"]:
-        errors["password"] = "Password is required"
-
-    # TODO
-    g.room_id = room_id
-    g.is_guest = is_guest
-    return render_template("customer/join_meeting.html", errors=errors)
-
-
 @bp.route('/join-meeting/<int:id>', methods=('GET', 'POST'))
 @customer_required
 def join_meeting(id):
@@ -66,7 +42,7 @@ def join_meeting(id):
     errors = {}
 
     # Check if the room exists
-    cur.execute("""SELECT room_id, cust_id FROM wcs.meeting_room WHERE room_id = %s""",
+    cur.execute("""SELECT room_id, cust_id, password FROM wcs.meeting_room WHERE room_id = %s""",
                 (id,))
     room = cur.fetchone()
     g.db.commit()
@@ -75,6 +51,7 @@ def join_meeting(id):
         flash("The meeting has ended.", "warning")
         return redirect(url_for("customer.index"))
 
+    # Remember customer id if exists
     cust_id = room["cust_id"]
 
     # Remember the dynamic id to access from the HTML
@@ -91,8 +68,63 @@ def join_meeting(id):
             g.is_guest = True
 
     if request.method == "POST":
-        # TODO
-        pass
+        f = request.form
+        cur = get_db()
+        errors = {}
+        # Check password
+        # Guest customer form handling
+        if g.is_guest:
+            # Check for required fields
+            if not f["email"] and not f["phone_number"]:
+                errors["contact_info"] = "Either email address or phone number must be entered"
+            if not f["short_name"]:
+                errors["short_name"] = "is-invalid"
+            if not f["password"]:
+                errors["password"] = "is-invalid"
+
+            # Process form
+            if not errors:
+                # Block unauthorized access attempts
+                if not check_password_hash(room["password"], f["password"]):
+                    flash("Password is incorrect.", "warning")
+                    return render_template("customer/join_meeting.html", errors=errors)
+                # Check if guest exists
+                guest_customer = get_guest_customer(f["email"], f["phone_number"])
+                if guest_customer is None:
+                    # Create new guest in table
+
+                    # Convert blank inputs to None
+                    guest_phone = f["phone_number"] or None
+                    guest_email = f["email"] or None
+                    cur.execute("""INSERT INTO wcs.guest_customer (phone_number, email_address, short_name) VALUES 
+                            (%s, %s, %s)""", (guest_phone, guest_email, f["short_name"]))
+                    g.db.commit()
+                    guest_customer = get_guest_customer(guest_email, guest_phone)
+
+                # Assign the guest customer to the room
+                cur.execute("""UPDATE wcs.meeting_room SET g_cust_id = %s WHERE room_id = %s""",
+                            (guest_customer["g_cust_id"], g.room_id))
+                g.db.commit()
+                # Update session
+                session["room_id"] = g.room_id
+                session["g_cust_id"] = guest_customer["g_cust_id"]
+                session["is_guest"] = True
+                return redirect(url_for("customer.meeting"))
+
+        # Registered customer form handling
+        else:
+            # Check for required fields
+            if not f["phone_number"]:
+                errors["phone_number"] = "is-invalid"
+            if not f["password"]:
+                errors["password"] = "is-invalid"
+
+            # Process form
+            if not errors:
+                if not check_password_hash(room["password"], f["password"]):
+                    flash("Password is incorrect.", "warning")
+                    return render_template("customer/join_meeting.html", errors=errors)
+                print("Number:", f["phone_number"])
 
     return render_template("customer/join_meeting.html", errors=errors)
 
@@ -103,6 +135,12 @@ def meeting():
     if "room_id" not in session:
         flash("You are not in a meeting.", "warning")
         return redirect(url_for("customer.index"))
+
+    # DEBUG VALUES
+    flash(f"Room: {session.get('room_id')} | ", "info")
+    flash(f"Rep id: {session.get('rep_id')} | ", "info")
+    flash(f"Cust id: {session.get('cust_id')} | ", "info")
+    flash(f"G cust id: {session.get('g_cust_id')}", "info")
     return render_template("customer/meeting.html")
 
 
@@ -118,8 +156,13 @@ def leave_meeting():
                         (room_id,))
             g.db.commit()
 
+    # Clear session
+    rep_id = session.get("rep_id")
+    session.pop("cust_id", None)
+    session.pop("g_cust_id", None)
+
     # Redirect according to user type (customer and representative)
-    if "rep_id" in session:
+    if rep_id:
         return redirect(url_for("representative.index"))
     else:
         return redirect(url_for("customer.index"))
