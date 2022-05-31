@@ -1,22 +1,22 @@
 {% extends "base.html" %}
 
 {% block navbar_brand_link %}
-    {% if session["rep_id"] %}
-        {{ url_for("representative.index") }}
-    {% endif %}
+{% if session["rep_id"] %}
+{{ url_for("representative.index") }}
+{% endif %}
 {% endblock %}
 
 {% block title %} Meeting {{ session["room_id"] }} {% endblock %}
 
 {% block main %}
 
-<button type="button" class="btn btn-primary" id="leaveButton">Leave meeting</button>
+<button type="button" class="btn btn-primary" id="leave_button">Leave meeting</button>
 
 <script charset="utf-8">
   // Put these JavaScript codes to the HTML file of the route
   // you want socket connections to happen.
   const socket = io("/meeting");
-  leaveButton = document.getElementById("leaveButton");
+  leaveButton = document.getElementById("leave_button");
   // Emit joined event to inform other users in the room
   socket.on("connect", () => {
     socket.emit("joined", {});

@@ -16,7 +16,8 @@
   <div class="card-body">
     {% if g.is_guest %}
     <!-- Guest customer form -->
-    <form action="{{ url_for("customer.guest_entry") }}" method="post" accept-charset="utf-8">
+    <form action="{{ url_for("customer.guest_entry", room_id=g.room_id, is_guest=g.is_guest) }}" method="post"
+      accept-charset="utf-8" id="join_meeting_form">
       <div class="border-bottom">
         <h2 class="h4">Guest Contact Form</h2>
         <div class="row mb-3">
@@ -24,14 +25,18 @@
           </p>
           <div class="col-sm-6">
             <label for="phone_number" class="">Phone number</label>
-            <input type="tel" pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}" class="form-control" id="phone_number"
-              name="phone_number" value="{{ request.form["phone_number"] }}">
+            <input type="tel" class="form-control" id="phone_number" name="phone_number"
+              value="{{ request.form["phone_number"] }}">
           </div>
           <div class="col-sm-6">
             <label for="email">Email address</label>
             <input placeholder="username@example.com" type="text" class="form-control" id="email" name="email"
               value="{{ request.form["email"] }}">
           </div>
+
+          {% if errors["contact_info"] %}
+          <p class="text-danger mt-1">{{ errors["contact_info"] }}</p>
+          {% endif %}
         </div>
 
         <div class="mb-3 col-sm-6 pe-2">
@@ -39,7 +44,9 @@
             <label for="short_name" class="col-form-label">Name</label>
             <p class="col-form-label text-muted ms-auto">How do you want to be called? </p>
           </div>
-          <input type="text" class="form-control" id="short_name" name="short_name" placeholder="e.g. John">
+          <input type="text" class="form-control {{ errors["short_name"] }}" id="short_name" name="short_name"
+            placeholder="e.g. John" value="{{ request.form["short_name"] }}">
+          <div class="invalid-feedback">Name is required</div>
         </div>
       </div>
 
@@ -47,7 +54,8 @@
       <p class="text-muted">Enter the password that was sent to you along with the meeting link.</p>
       <div class="mb-3 col-sm-6 pe-2">
         <label for="password" class="col-form-label">Password</label>
-        <input type="password" class="form-control" id="password" name="password">
+        <input type="password" class="form-control {{ errors["password"] }}" id="password" name="password">
+        <div class="invalid-feedback">Password is required</div>
       </div>
 
       <div class="d-flex d-md-block ">
@@ -57,15 +65,16 @@
 
     {% else %}
     <!-- Customer form -->
-    <form action="{{ url_for("customer.join_meeting", id=g.room_id) }}" method="post" accept-charset="utf-8">
+    <form action="{{ url_for("customer.join_meeting", id=g.room_id) }}" method="post" accept-charset="utf-8"
+      id="join_meeting_form">
       <div class="border-bottom">
         <h2 class="h4">Customer Validation</h2>
         <p class="text-muted">Please enter your phone number that is registered to the company.
         </p>
         <div class="col-sm-6 mb-3 pe-2">
           <label for="phone_number" class="">Phone number</label>
-          <input type="tel" pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}" class="form-control" id="phone_number"
-            name="phone_number" value="{{ request.form["phone_number"] }}">
+          <input type="tel" class="form-control" id="phone_number" name="phone_number"
+            value="{{ request.form["phone_number"] }}">
         </div>
       </div>
 
@@ -84,4 +93,29 @@
     {% endif %}
   </div>
 </div>
+
+<!-- Import intl-tel-input javascript file -->
+<script src="{{ url_for("static", filename="intl-tel-input/js/intlTelInput.js") }}"></script>
+<script charset="utf-8">
+  const phoneNumber = document.getElementById("phone_number");
+  const form = document.getElementById("join_meeting_form");
+  // Initialize intl-tel-input
+  const iti = window.intlTelInput(phoneNumber, {
+    // any initialisation options go here
+    utilsScript: '{{ url_for("static", filename="intl-tel-input/js/utils.js") }}',
+    initialCountry: "tr",
+    preferredCountries: ["tr", "us", "gb", "de", "az", "uz", "kz", "tm"]
+  });
+  // Client-side validate form on submit
+  /*
+  form.addEventListener('submit', function(event) {
+    if (!form.checkValidity() || !iti.isValidNumber()) {
+      event.preventDefault()
+      event.stopPropagation()
+    }
+    form.classList.add('was-validated')
+  });
+  */
+</script>
+
 {% endblock %}
