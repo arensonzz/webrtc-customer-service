@@ -6,17 +6,73 @@
 {% endif %}
 {% endblock %}
 
-{% block title %} Meeting {{ session["room_id"] }} {% endblock %}
+{% block title %} Room - {{ session["room_id"] }} {% endblock %}
 
 {% block main %}
 
-<button type="button" class="btn btn-primary" id="leave_button">Leave meeting</button>
+<div class="container-fluid">
+  <div class="h-stack">
+    <button type="button" class="btn btn-primary" id="leave_button">Leave meeting</button>
+    <!-- Button that fires modal to copy invite link -->
+    <button type="button" class="btn btn-primary" id="copy_invite_link" data-bs-toggle="modal"
+      data-bs-target="#invite_link_modal">Copy invite link</button>
+  </div>
+</div>
 
+<!-- Modal for representative to copy the invite link -->
+<div id="invite_link_modal" class="modal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Meeting Invite Link</h5>
+        <button id="invite_link_close" type="button" class="btn-close" data-bs-dismiss="modal"
+          aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>Copy the text with Ctrl + C and then press Enter to close the box.</p>
+        <form id="invite_link_form" class="text-center">
+          <input readonly type="text" value="" id="invite_link" />
+          <input hidden type="submit">
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Include socket.io client -->
+<script src="{{ url_for("static", filename="socket.io/socket.io.js") }}" charset="utf-8"></script>
+<!-- Include adapter for WebRTC -->
+<!-- https://github.com/webrtchacks/adapter#readme-->
+<script src="{{ url_for("static", filename="webrtc-adapter/adapter.js") }}" charset="utf-8"></script>
 <script charset="utf-8">
+  const socket = io("/meeting");
+  const leaveButton = document.getElementById("leave_button");
+  const inviteLinkModal = document.getElementById("invite_link_modal");
+  const inviteLinkForm = document.getElementById("invite_link_form");
+  // Test webrtc-adapter
+  console.log("WebRTC Adapter: ", adapter.browserDetails.browser);
+  // Copy invite link modal
+  inviteLinkModal.addEventListener("shown.bs.modal", function () {
+    const inviteLink = document.getElementById("invite_link");
+    let text = "{{ request.root_url }}";
+    text = text.slice(0, text.length - 1);
+    text += "{{ url_for('customer.join_meeting', id=session['room_id']) }}";
+    inviteLink.value = text;
+    // autofocus invite link text
+    inviteLink.focus();
+    inviteLink.select();
+  });
+  inviteLinkForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    document.getElementById("invite_link_close").click();
+  });
+  // SOCKET.IO
   // Put these JavaScript codes to the HTML file of the route
   // you want socket connections to happen.
-  const socket = io("/meeting");
-  leaveButton = document.getElementById("leave_button");
   // Emit joined event to inform other users in the room
   socket.on("connect", () => {
     socket.emit("joined", {});
@@ -37,8 +93,9 @@
   });
   // Leave room before leaving page
   /* window.onbeforeunload = () => {
-    leaveRoom();
-    return "Do you want to leave chat?";
-  }; */
+      leaveRoom();
+      return "Do you want to leave chat?";
+    }; */
 </script>
+
 {% endblock %}

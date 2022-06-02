@@ -24,7 +24,8 @@ def index():
     # Redirect logged in representatives to representative index page
     if "rep_id" in session:
         return redirect(url_for("representative.index"))
-    return render_template("customer/index.html")
+    else:
+        return render_template("customer/index.html")
 
 
 @bp.route('/request-meeting', methods=('GET', 'POST'))
@@ -42,31 +43,29 @@ def join_meeting(id):
     cust_id = None
     errors = {}
 
+    # Redirect customer to the ongoin meeting if there is one
+    if "room_id" in session:
+        flash("You have ongoing meeting.", "warning")
+        return redirect(url_for("customer.meeting"))
+
     # Check if the room exists
     cur.execute("""SELECT room_id, cust_id, password FROM wcs.meeting_room WHERE room_id = %s""",
                 (id,))
     room = cur.fetchone()
     g.db.commit()
     if room is None:
-        session.clear()
         flash("The meeting has ended.", "warning")
         return redirect(url_for("customer.index"))
 
     # Remember customer id if exists
     cust_id = room["cust_id"]
 
+    # Declare customer type
+    g.is_guest = True if cust_id is None else False
+
     # Remember the dynamic id to access from the HTML
     if "room_id" not in g:
         g.room_id = id
-    # Remember the customer type
-    if "is_guest" not in g:
-        g.is_guest = False
-
-    # Get the customer info from the room record if not guest customer
-    if "cust_id" not in session and not g.is_guest:
-        # Declare as guest customer
-        if cust_id is None:
-            g.is_guest = True
 
     if request.method == "POST":
         f = request.form
@@ -94,8 +93,8 @@ def join_meeting(id):
                     return render_template("customer/join_meeting.html", errors=errors)
                 # Check if guest exists
                 guest_customer = get_guest_customer(f["email"], f["phone_number"])
+                # Create new guest in table if guest does not exist
                 if guest_customer is None:
-                    # Create new guest in table
 
                     # Convert blank inputs to None
                     guest_phone = f["phone_number"] or None
@@ -113,6 +112,7 @@ def join_meeting(id):
                 # Update session
                 session["room_id"] = g.room_id
                 session["g_cust_id"] = guest_customer["g_cust_id"]
+                session.pop("cust_id", None)
                 session["is_guest"] = True
                 return redirect(url_for("customer.meeting"))
 
@@ -141,6 +141,7 @@ def join_meeting(id):
                 # Update session
                 session["room_id"] = g.room_id
                 session["cust_id"] = customer["cust_id"]
+                session.pop("g_guest_id", None)
                 session["is_guest"] = False
                 return redirect(url_for("customer.meeting"))
 

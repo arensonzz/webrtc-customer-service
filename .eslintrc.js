@@ -3,14 +3,14 @@ module.exports = {
     browser: true,
     es2021: true,
   },
-  extends: ['prettier'],
-  plugins: ['prettier'],
+  extends: ["prettier"],
+  plugins: ["html", "prettier"],
   parserOptions: {
-    ecmaVersion: 'latest',
-    sourceType: 'script',
+    ecmaVersion: "latest",
+    sourceType: "module",
   },
   rules: {
-    'prettier/prettier': 'error',
-    'no-unused-vars': 'error',
+    "prettier/prettier": "error",
+    "no-unused-vars": "error",
   },
 };

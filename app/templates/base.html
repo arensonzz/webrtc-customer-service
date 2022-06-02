@@ -11,8 +11,6 @@
     integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" rel="stylesheet">
   <script crossorigin="anonymous" src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
     integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"></script>
-  <!-- Include socket.io client -->
-  <script src="{{ url_for("static", filename="socket.io/socket.io.js") }}" charset="utf-8"></script>
 
   <!-- Include intl-tel-input -->
   <link rel="stylesheet" href="{{ url_for("static", filename="intl-tel-input/css/intlTelInput.css") }}" type="text/css"
@@ -82,9 +80,9 @@
   </div>
 
   <script>
-    const errorToast = document.getElementById('errorToast')
-    const toast = new bootstrap.Toast(errorToast)
-    toast.show()
+    const errorToast = document.getElementById("errorToast");
+    const toast = new bootstrap.Toast(errorToast);
+    toast.show();
   </script>
   {% endif %}
   {% endwith %}
