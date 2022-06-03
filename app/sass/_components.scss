@@ -1,0 +1,24 @@
+.loading-background {
+  position: absolute;
+  top: 76px;
+  left: 0;
+  width: 100vw;
+  height: calc(100vh - 76px);
+  z-index: 99;
+  background-color: var(--bs-light);
+  opacity: 0.8;
+}
+
+.flex-equal-width {
+  flex: 1 1 0;
+}
+
+.toggle-button {
+  height: 36px;
+  width: 48px;
+}
+
+.flex-break {
+  flex: 0 0 100%;
+  height: 0;
+}

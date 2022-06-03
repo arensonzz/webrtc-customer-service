@@ -45,3 +45,17 @@ nav .navbar-brand {
 .join-meeting-container {
   max-width: 800px;
 }
+
+// customer/meeting.html
+@media (max-width: 575px) {
+  .navbar-flex-break {
+    flex: 0 0 100%;
+    height: 0;
+  }
+}
+
+@media (min-width: 576px) {
+  .navbar-buttons-end {
+    margin-left: auto;
+  }
+}

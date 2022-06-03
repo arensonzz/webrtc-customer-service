@@ -8,15 +8,89 @@
 
 {% block title %} Room - {{ session["room_id"] }} {% endblock %}
 
+{% block navbar_nav %}
+<div class="navbar-flex-break"></div>
+<div id="navbar_buttons"
+  class="navbar-buttons m-2 flex-fill d-flex flex-column flex-sm-row gap-1 justify-content-start">
+  <!-- Button that fires modal to copy invite link -->
+  <div class="flex-grow-1 flex-sm-grow-0">
+    {% if "rep_id" in session %}
+    <button type="button" class="w-100 btn btn-outline-primary" id="copy_invite_link" data-bs-toggle="modal"
+      data-bs-target="#invite_link_modal">Copy invite link</button>
+    {% endif %}
+  </div>
+  <div class="flex-grow-1 flex-sm-grow-0 navbar-buttons-end">
+    <button type="button" class="w-100 btn btn-danger" id="leave_button">Leave
+      meeting</button>
+  </div>
+</div>
+
+{% endblock %}
+
 {% block main %}
 
-<div class="container-fluid">
-  <div class="h-stack">
-    <button type="button" class="btn btn-primary" id="leave_button">Leave meeting</button>
-    <!-- Button that fires modal to copy invite link -->
-    <button type="button" class="btn btn-primary" id="copy_invite_link" data-bs-toggle="modal"
-      data-bs-target="#invite_link_modal">Copy invite link</button>
+<!-- <div id="loading_background" class="loading-background d-flex justify-content-center align-items-center">
+  <div class="spinner-border text-secondary" role="status">
+    <span class="visually-hidden">Loading...</span>
   </div>
+</div> -->
+<div class="container-fluid">
+  <!-- First row -->
+  <div class="d-flex flex-column flex-sm-row gap-3 mb-3">
+    <div class="flex-equal-width ratio ratio-16x9 border border-2 rounded">
+      <video id="local_video" class="" muted>Your browser does not support video tag.</video>
+    </div>
+
+    <div class="flex-equal-width ratio ratio-16x9 border border-2 rounded">
+      <video id="remote_video" class="" muted>Your browser does not support video tag.</video>
+    </div>
+  </div>
+
+  <!-- Second row -->
+  <div class="d-flex flex-column flex-sm-row gap-3 justify-content-center">
+    <button id="initiate_video" class=" btn btn-outline-primary">Join with camera and microphone</button>
+  </div>
+
+
+  <!-- Third row -->
+  <div class="d-flex flex-column flex-sm-row gap-3">
+    <!-- Video controls -->
+    <div id="" class="flex-equal-width text-center">
+      <button aria-label="Toggle camera" id="toggle_camera" class="toggle-button btn btn-danger d-none"><i
+          class="fa-solid fa-video-slash"></i></button>
+      <button aria-label="Toggle microphone" id="toggle_mic" class="toggle-button btn btn-danger d-none"><i
+          class="fa-solid fa-microphone-slash"></i></button>
+    </div>
+
+    <!-- Customer info card -->
+    <div class="flex-equal-width d-flex justify-content-center">
+      {% if "rep_id" in session %}
+      <div id="customer_info_card" class="card text-dark bg-light d-none w-50">
+        <div class="card-body">
+          <h5 id="customer_name" class="card-title"></h5>
+          <h6 id="customer_type" class="card-subtitle mb-2 text-muted"></h6>
+          <div class="row">
+            <p class="col-4 fw-bold">ID</p>
+            <p id="customer_id" class="col-8 card-text"></p>
+          </div>
+          <div class="row">
+            <p class="col-4 fw-bold">Name</p>
+            <p id="customer_short_name" class="col-8 card-text"></p>
+          </div>
+          <div class="row">
+            <p class="col-4 fw-bold">Phone</p>
+            <p id="customer_phone" class="col-8 card-text"></p>
+          </div>
+          <div class="row">
+            <p class="col-4 fw-bold">Email</p>
+            <p id="customer_email" class="col-8 card-text"></p>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
 </div>
 
 <!-- Modal for representative to copy the invite link -->
@@ -48,14 +122,150 @@
 <!-- https://github.com/webrtchacks/adapter#readme-->
 <script src="{{ url_for("static", filename="webrtc-adapter/adapter.js") }}" charset="utf-8"></script>
 <script charset="utf-8">
+  // GLOBAL DEFINITIONS
+  // DOM elements
   const socket = io("/meeting");
   const leaveButton = document.getElementById("leave_button");
   const inviteLinkModal = document.getElementById("invite_link_modal");
   const inviteLinkForm = document.getElementById("invite_link_form");
-  // Test webrtc-adapter
-  console.log("WebRTC Adapter: ", adapter.browserDetails.browser);
+  const customerInfoCard = document.getElementById("customer_info_card");
+  const toggleCamera = document.getElementById("toggle_camera");
+  const toggleMic = document.getElementById("toggle_mic");
+  const initiateVideo = document.getElementById("initiate_video");
+  const localVideo = document.getElementById("local_video");
+  const remoteVideo = document.getElementById("remote_video");
+
+  // Variables
+  const mediaStreamConstraints = {
+    video: true,
+    audio: true,
+  };
+  let localStream = null;
+  let isCameraOpen = false;
+  let isMicOpen = false;
+  let isVideoInitiated = false;
+  let customer = null;
+  let isGuest = null;
+
+  // FUNCTIONS
+  /* Update customer card's fields with the customer object's fields */
+  function updateCustomerCard(customer, isGuest) {
+    if (isGuest) {
+      document.querySelector("#customer_info_card #customer_name").innerText =
+        customer.short_name;
+      document.querySelector("#customer_info_card #customer_type").innerText =
+        "Guest Customer";
+      document.querySelector("#customer_info_card #customer_id").innerText =
+        customer.g_cust_id;
+      document
+        .querySelector("#customer_info_card #customer_short_name")
+        .classList.add("d-none");
+      document.querySelector("#customer_info_card #customer_phone").innerText =
+        customer.phone_number;
+      document.querySelector("#customer_info_card #customer_email").innerText =
+        customer.email_address;
+    } else {
+      document.querySelector("#customer_info_card #customer_name").innerText =
+        customer.full_name;
+      document.querySelector("#customer_info_card #customer_type").innerText = "Customer";
+      document.querySelector("#customer_info_card #customer_id").innerText =
+        customer.cust_id;
+      document.querySelector("#customer_info_card #customer_short_name").innerText =
+        customer.short_name;
+      document.querySelector("#customer_info_card #customer_phone").innerText =
+        customer.phone_number;
+      document.querySelector("#customer_info_card #customer_email").innerText =
+        customer.email_address;
+    }
+  }
+
+  /* Get camera and mic permissions from user */
+  function onInitiateVideo() {
+    navigator.mediaDevices
+      .getUserMedia(mediaStreamConstraints)
+      .then((stream) => {
+        // start with camera and mic disabled
+        stream.getTracks().forEach((track) => {
+          track.enabled = false;
+        });
+        localVideo.srcObject = stream;
+        localVideo.play();
+        // set global variables
+        localStream = stream;
+        isVideoInitiated = true;
+        initiateVideo.classList.add("d-none");
+        toggleCamera.classList.remove("d-none");
+        toggleMic.classList.remove("d-none");
+        isCameraOpen = false;
+        isMicOpen = false;
+      })
+      .catch((err) => {
+        console.log("navigator.getUserMedia error: " + err);
+      });
+  }
+
+  /* Toggle local camera on and off */
+  function onToggleCamera() {
+    if (!isVideoInitiated) {
+      alert("You must first give permissions for camera and mic usage.");
+      return;
+    }
+    const cameraIcon = document.querySelector("#toggle_camera i");
+    if (isCameraOpen) {
+      // track.stop() is permanent, you cannot get the video back
+      // instead use track.enabled = false
+      localStream.getVideoTracks().forEach((track) => {
+        track.enabled = false;
+      });
+      isCameraOpen = false;
+      cameraIcon.classList.remove("fa-video");
+      cameraIcon.classList.add("fa-video-slash");
+      toggleCamera.classList.remove("btn-primary");
+      toggleCamera.classList.add("btn-danger");
+    } else {
+      localStream.getVideoTracks().forEach((track) => {
+        track.enabled = true;
+      });
+      isCameraOpen = true;
+      cameraIcon.classList.remove("fa-video-slash");
+      cameraIcon.classList.add("fa-video");
+      toggleCamera.classList.remove("btn-danger");
+      toggleCamera.classList.add("btn-primary");
+    }
+  }
+
+  /* Toggle local mic on and off */
+  function onToggleMic() {
+    if (!isVideoInitiated) {
+      alert("You must first give permissions for camera and mic usage.");
+      return;
+    }
+    const micIcon = document.querySelector("#toggle_mic i");
+    if (isMicOpen) {
+      // track.stop() is permanent, you cannot get the video back
+      // instead use track.enabled = false
+      localStream.getAudioTracks().forEach((track) => {
+        track.enabled = false;
+      });
+      isMicOpen = false;
+      micIcon.classList.remove("fa-microphone");
+      micIcon.classList.add("fa-microphone-slash");
+      toggleMic.classList.remove("btn-primary");
+      toggleMic.classList.add("btn-danger");
+    } else {
+      localStream.getAudioTracks().forEach((track) => {
+        track.enabled = true;
+      });
+      isMicOpen = true;
+      micIcon.classList.remove("fa-microphone-slash");
+      micIcon.classList.add("fa-microphone");
+      toggleMic.classList.remove("btn-danger");
+      toggleMic.classList.add("btn-primary");
+    }
+  }
+
   // Copy invite link modal
-  inviteLinkModal.addEventListener("shown.bs.modal", function () {
+  inviteLinkModal.addEventListener("shown.bs.modal", () => {
     const inviteLink = document.getElementById("invite_link");
     let text = "{{ request.root_url }}";
     text = text.slice(0, text.length - 1);
@@ -65,32 +275,52 @@
     inviteLink.focus();
     inviteLink.select();
   });
+
   inviteLinkForm.addEventListener("submit", (event) => {
     event.preventDefault();
     event.stopPropagation();
     document.getElementById("invite_link_close").click();
   });
+
+  // WEBRTC
+  // Test webrtc-adapter
+  console.log("WebRTC Adapter: ", adapter.browserDetails.browser);
+  initiateVideo.addEventListener("click", onInitiateVideo);
+  toggleCamera.addEventListener("click", onToggleCamera);
+  toggleMic.addEventListener("click", onToggleMic);
+
   // SOCKET.IO
   // Put these JavaScript codes to the HTML file of the route
   // you want socket connections to happen.
   // Emit joined event to inform other users in the room
   socket.on("connect", () => {
-    socket.emit("joined", {});
-    console.log("SocketIO: Connected to server");
+    socket.emit("joined");
+    console.log("SocketIO: connect");
   });
+
+  socket.on("client joined", (data) => {
+    console.log("SocketIO: client joined");
+    // If signal came from non representative then update customer card
+    if (!data.is_rep) {
+      customer = data.customer;
+      isGuest = data.is_guest;
+      customerInfoCard.classList.remove("d-none");
+      // Update customer card
+      updateCustomerCard(customer, isGuest);
+    }
+  });
+
   // Leave room by clicking the button
-  function leaveRoom() {
-    socket.emit("leave", {}, () => {
-      socket.disconnect();
-      window.location.href = '{{ url_for("customer.leave_meeting") }}';
-    });
-  }
   leaveButton.addEventListener("click", () => {
     isLeave = confirm("Do you want to leave the meeting?");
     if (isLeave) {
-      leaveRoom();
+      socket.emit("left", {}, () => {
+        socket.disconnect();
+        window.location.href = '{{ url_for("customer.leave_meeting") }}';
+      });
     }
   });
+
   // Leave room before leaving page
   /* window.onbeforeunload = () => {
       leaveRoom();

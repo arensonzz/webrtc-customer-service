@@ -15,12 +15,17 @@ def str_surround(str: str, surround: str = "%", start=True, end=True):
     return str
 
 
-def get_guest_customer(email, phone_number):
-    """Find guest_customer with the given email or phone_number from database."""
+def get_guest_customer(email=None, phone_number=None, g_cust_id=None):
+    """Find guest_customer with the given email or phone_number from database if g_cust_id
+    is given as None. Otherwise find the guest_customer with given g_cust_id."""
     cur = get_db()
 
-    cur.execute("""SELECT * FROM wcs.guest_customer WHERE
-            email_address = %s OR phone_number = %s""", (email, phone_number))
+    if g_cust_id:
+        cur.execute("""SELECT * FROM wcs.guest_customer WHERE
+            g_cust_id = %s""", (g_cust_id,))
+    else:
+        cur.execute("""SELECT * FROM wcs.guest_customer WHERE
+                email_address = %s OR phone_number = %s""", (email, phone_number))
     guest_customer = cur.fetchone()
     g.db.commit()
     return guest_customer

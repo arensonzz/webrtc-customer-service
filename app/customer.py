@@ -6,13 +6,13 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 import logging
 from app.db import get_db
-from flask_socketio import emit, leave_room, join_room as flask_join_room
+from flask_socketio import emit, leave_room, join_room
 from . import socketio
 from .helpers import get_guest_customer, is_phone_valid, get_customer
 
 
 # Uncomment following line to print DEBUG logs
-#  logging.basicConfig(encoding='utf-8', level=logging.DEBUG)
+logging.basicConfig(encoding='utf-8', level=logging.DEBUG)
 
 bp = Blueprint('customer', __name__)
 
@@ -156,10 +156,10 @@ def meeting():
         return redirect(url_for("customer.index"))
 
     # DEBUG VALUES
-    flash(f"Room: {session.get('room_id')} | ", "info")
-    flash(f"Rep id: {session.get('rep_id')} | ", "info")
-    flash(f"Cust id: {session.get('cust_id')} | ", "info")
-    flash(f"G cust id: {session.get('g_cust_id')}", "info")
+    #  flash(f"Room: {session.get('room_id')} | ", "info")
+    #  flash(f"Rep id: {session.get('rep_id')} | ", "info")
+    #  flash(f"Cust id: {session.get('cust_id')} | ", "info")
+    #  flash(f"G cust id: {session.get('g_cust_id')}", "info")
     return render_template("customer/meeting.html")
 
 
@@ -193,13 +193,35 @@ def leave_meeting():
 # Note: You cannot modify session inside socket.io events. Instead
 # create a route and redirect to that route.
 @socketio.on('connect', namespace="/meeting")
-def test_connect():
+def on_connect():
     """Test SocketIO connection by passing message between server and client."""
     logging.debug("SocketIO: Connected to client")
 
 
-@socketio.on('leave', namespace="/meeting")
-def left(message):
+@socketio.on('joined', namespace="/meeting")
+def on_joined():
+    """Sent by clients after they connect to socket.io and finish their on connect event."""
+    room_id = session["room_id"]
+    # Join client to socket.io room
+    join_room(room_id)
+    # Send different data according to the connected user type 
+    is_rep = False
+    customer = None
+    if "rep_id" in session:
+        is_rep = True
+    else:
+        if session["is_guest"]:
+            customer = get_guest_customer(g_cust_id=session["g_cust_id"])
+        else:
+            customer = get_customer(session["cust_id"])
+
+    # Alert other clients of the joining client
+    emit("client joined", {'is_rep': is_rep, 'is_guest': session.get("is_guest"),
+                           'customer': customer}, to=room_id, include_self=False)
+
+
+@socketio.on('left', namespace="/meeting")
+def on_left(message):
     """Sent by clients when they leave a room."""
     room = session['room_id']
     leave_room(room)
