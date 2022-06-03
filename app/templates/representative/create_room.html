@@ -72,16 +72,21 @@ Create Room
 <script>
   let selectCustomer = document.getElementById("select_customer");
   let customerSearch = document.getElementById("customer_search");
-  let searchType = document.getElementById("search_type")
+  let searchType = document.getElementById("search_type");
   // Fetch customers from database with each key press
-  customerSearch.addEventListener('input', async function() {
-    let response = await fetch('{{ url_for("representative.get_customers") }}' + "?" + searchType.value + "=" +
-      customerSearch.value);
+  customerSearch.addEventListener("input", async function () {
+    let response = await fetch(
+      '{{ url_for("representative.get_customers") }}' +
+        "?" +
+        searchType.value +
+        "=" +
+        customerSearch.value
+    );
     let customers = await response.json();
-    let html = '<option selected>Continue without selecting a customer</option>';
+    let html = "<option selected>Continue without selecting a customer</option>";
     customers.forEach((customer) => {
-      html += `<option value="${customer["cust_id"]}">${customer["full_name"]}</option>`
-    })
+      html += `<option value="${customer["cust_id"]}">${customer["full_name"]}</option>`;
+    });
     selectCustomer.innerHTML = html;
   });
 </script>

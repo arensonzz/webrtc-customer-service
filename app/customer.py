@@ -6,7 +6,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 import logging
 from app.db import get_db
-from flask_socketio import emit, leave_room, join_room
+from flask_socketio import emit, leave_room, join_room, rooms
 from . import socketio
 from .helpers import get_guest_customer, is_phone_valid, get_customer
 
@@ -155,6 +155,19 @@ def meeting():
         flash("You are not in a meeting.", "warning")
         return redirect(url_for("customer.index"))
 
+    # Check if the room exists
+    cur = get_db()
+    cur.execute("SELECT room_id FROM wcs.meeting_room WHERE room_id = %s", (session["room_id"],))
+    g.db.commit()
+    if cur.fetchone() is None:
+        flash("The meeting has ended.", "warning")
+        # Clear room from the session
+        session.pop("cust_id", None)
+        session.pop("g_cust_id", None)
+        session.pop("room_id", None)
+        session.pop("is_guest", None)
+        return redirect(url_for("customer.index"))
+
     # DEBUG VALUES
     #  flash(f"Room: {session.get('room_id')} | ", "info")
     #  flash(f"Rep id: {session.get('rep_id')} | ", "info")
@@ -167,24 +180,32 @@ def meeting():
 def leave_meeting():
     """Route which clears session and leaves the meeting."""
     if "room_id" in session:
-        # Clear room_id from session
+        # Clear session
         room_id = session.pop("room_id")
-        # Delete room from the database
-        with get_db() as cur:
-            cur.execute("""DELETE FROM wcs.meeting_room WHERE room_id = %s""",
-                        (room_id,))
-            g.db.commit()
+        session.pop("g_cust_id", None)
+        session.pop("cust_id", None)
+        customer = session.pop("customer", None)
+        # Get names and flash info message
+        message = Markup(f"The meeting with the id <b>{room_id}</b> has ended.")
+        if "rep_id" in session and customer is not None:
+            name = customer["short_name"]
+            if "cust_id" in customer:
+                name = customer["full_name"]
 
-    # Clear session
-    rep_id = session.get("rep_id")
-    session.pop("cust_id", None)
-    session.pop("g_cust_id", None)
+            message = Markup(f"The meeting with <b>{name}</b> has ended.")
+
+        # Delete room from the database
+        cur = get_db()
+        cur.execute("""DELETE FROM wcs.meeting_room WHERE room_id = %s""",
+                    (room_id,))
+        g.db.commit()
+
+        flash(message, "info")
+    else:
+        flash("You are not in a meeting.", "warning")
 
     # Redirect according to user type (customer and representative)
-    if rep_id:
-        return redirect(url_for("representative.index"))
-    else:
-        return redirect(url_for("customer.index"))
+    return redirect(url_for("customer.index"))
 
 
 # SocketIO Events
@@ -202,9 +223,8 @@ def on_connect():
 def on_joined():
     """Sent by clients after they connect to socket.io and finish their on connect event."""
     room_id = session["room_id"]
-    # Join client to socket.io room
     join_room(room_id)
-    # Send different data according to the connected user type 
+    # Send different data according to the connected user type
     is_rep = False
     customer = None
     if "rep_id" in session:
@@ -225,4 +245,12 @@ def on_left(message):
     """Sent by clients when they leave a room."""
     room = session['room_id']
     leave_room(room)
-    emit("end", room=room)
+    emit("end meeting", room=room)
+
+
+@socketio.on('disconnect', namespace="/meeting")
+def on_disconnect():
+    """Sent by clients when they disconnect from the socket."""
+    print("### Client disconnected")
+    #  room = session['room_id']
+    #  emit("end meeting", include_self=False, room=room)

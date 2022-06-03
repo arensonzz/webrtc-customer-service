@@ -54,6 +54,16 @@ def index():
     return redirect(url_for("representative.create_room"))
 
 
+@bp.route('/remember-customer', methods=('POST',))
+@login_required
+def remember_customer():
+    """Save customer info to session for future use."""
+    customer = request.json.get("customer")
+    session["customer"] = customer
+    session["customer"]["is_guest"] = "g_cust_id" in session
+    return "success", 200
+
+
 @bp.route('/create-room', methods=('GET', 'POST'))
 @login_required
 def create_room():
@@ -105,18 +115,3 @@ def create_room():
                 return redirect(url_for("customer.meeting"))
 
     return render_template("representative/create_room.html")
-
-
-@bp.route('/leave-room')
-@login_required
-def leave_chat():
-    if "room_id" in session:
-        session.pop("room_id")
-    return redirect(url_for("representative.create_room"))
-
-
-# SocketIO Events
-# Note: namespace is not the same as route. Socket.io namespaces
-# just allow you to split logic of application over single shared connection.
-# Note: You cannot modify session inside socket.io events. Instead
-# create a route and redirect to that route.

@@ -15,12 +15,13 @@
   <!-- Button that fires modal to copy invite link -->
   <div class="flex-grow-1 flex-sm-grow-0">
     {% if "rep_id" in session %}
-    <button type="button" class="w-100 btn btn-outline-primary" id="copy_invite_link" data-bs-toggle="modal"
+    <button type="button" class="w-100 btn btn-outline-primary" data-bs-toggle="modal"
       data-bs-target="#invite_link_modal">Copy invite link</button>
     {% endif %}
   </div>
   <div class="flex-grow-1 flex-sm-grow-0 navbar-buttons-end">
-    <button type="button" class="w-100 btn btn-danger" id="leave_button">Leave
+    <button type="button" class="w-100 btn btn-danger" id="leave_prompt" data-bs-toggle="modal"
+      data-bs-target="#leave_meeting_modal">End
       meeting</button>
   </div>
 </div>
@@ -48,7 +49,7 @@
 
   <!-- Second row -->
   <div class="d-flex flex-column flex-sm-row gap-3 justify-content-center">
-    <button id="initiate_video" class=" btn btn-outline-primary">Join with camera and microphone</button>
+    <button id="initiate_video" class=" btn btn-outline-primary mb-3">Join with camera and microphone</button>
   </div>
 
 
@@ -65,7 +66,7 @@
     <!-- Customer info card -->
     <div class="flex-equal-width d-flex justify-content-center">
       {% if "rep_id" in session %}
-      <div id="customer_info_card" class="card text-dark bg-light d-none w-50">
+      <div id="customer_info_card" class="card text-dark bg-light d-none w-100">
         <div class="card-body">
           <h5 id="customer_name" class="card-title"></h5>
           <h6 id="customer_type" class="card-subtitle mb-2 text-muted"></h6>
@@ -116,6 +117,22 @@
   </div>
 </div>
 
+
+<!-- Modal to confirm if user wants to end the meeting-->
+<div id="leave_meeting_modal" class="modal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-body">
+        <p>Do you really want to end the meeting?</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No</button>
+        <button id="confirm_leave" type="button" class="btn btn-danger" data-bs-dismiss="modal">Yes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Include socket.io client -->
 <script src="{{ url_for("static", filename="socket.io/socket.io.js") }}" charset="utf-8"></script>
 <!-- Include adapter for WebRTC -->
@@ -125,7 +142,7 @@
   // GLOBAL DEFINITIONS
   // DOM elements
   const socket = io("/meeting");
-  const leaveButton = document.getElementById("leave_button");
+  const confirmLeave = document.getElementById("confirm_leave");
   const inviteLinkModal = document.getElementById("invite_link_modal");
   const inviteLinkForm = document.getElementById("invite_link_form");
   const customerInfoCard = document.getElementById("customer_info_card");
@@ -150,6 +167,7 @@
   // FUNCTIONS
   /* Update customer card's fields with the customer object's fields */
   function updateCustomerCard(customer, isGuest) {
+    customerInfoCard.classList.remove("d-none");
     if (isGuest) {
       document.querySelector("#customer_info_card #customer_name").innerText =
         customer.short_name;
@@ -282,6 +300,16 @@
     document.getElementById("invite_link_close").click();
   });
 
+  document.addEventListener("DOMContentLoaded", () => {
+    // Reload customer info card if user is representative and customer is defined
+    if (customerInfoCard) {
+      customer = JSON.parse('{{ session["customer"]|default("{}")|tojson }}');
+      if (customer) {
+        updateCustomerCard(customer, customer["is_guest"]);
+      }
+    }
+  });
+
   // WEBRTC
   // Test webrtc-adapter
   console.log("WebRTC Adapter: ", adapter.browserDetails.browser);
@@ -304,28 +332,45 @@
     if (!data.is_rep) {
       customer = data.customer;
       isGuest = data.is_guest;
-      customerInfoCard.classList.remove("d-none");
+      // Save customer to session
+      fetch('{{ url_for("representative.remember_customer") }}', {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          customer: customer,
+        }),
+      }).catch((error) => {
+        console.error("Error", error);
+      });
       // Update customer card
       updateCustomerCard(customer, isGuest);
     }
   });
 
-  // Leave room by clicking the button
-  leaveButton.addEventListener("click", () => {
-    isLeave = confirm("Do you want to leave the meeting?");
-    if (isLeave) {
-      socket.emit("left", {}, () => {
-        socket.disconnect();
-        window.location.href = '{{ url_for("customer.leave_meeting") }}';
-      });
-    }
+  socket.on("end meeting", async () => {
+    console.log("SocketIO: end meeting");
+    socket.disconnect();
+    // window.location.href = '{{ url_for("customer.leave_meeting") }}';
+    window.location.replace('{{ url_for("customer.leave_meeting") }}');
   });
 
-  // Leave room before leaving page
+  // End meeting after user confirms
+  confirmLeave.addEventListener("click", () => {
+    socket.emit("left", {}, async () => {
+      socket.disconnect();
+      // window.location.href = '{{ url_for("customer.leave_meeting") }}';
+      window.location.replace('{{ url_for("customer.leave_meeting") }}');
+    });
+  });
+
+  // Disconnect from socket before leaving the page
   /* window.onbeforeunload = () => {
-      leaveRoom();
-      return "Do you want to leave chat?";
-    }; */
+    socket.disconnect();
+    return "Do you want to leave the meeting?";
+  }; */
 </script>
 
 {% endblock %}
