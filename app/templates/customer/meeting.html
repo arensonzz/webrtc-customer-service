@@ -38,18 +38,19 @@
 <div class="container">
   <!-- First row -->
   <div class="row g-2 mb-2">
-    <div class="d-md-none col-6 align-self-end text-center">
-      <h1 id="customer_name_mobile" class="h5"></h1>
-
-    </div>
     <div class="ms-auto ms-md-0 col-6 col-md">
       <div class="ratio ratio-16x9 border border-2 rounded bg-secondary">
         <video id="local_video" class="" muted>Your browser does not support video tag.</video>
       </div>
+
     </div>
 
-    <div class="col-12 col-md order-last order-md-first ">
+    <div class="col-12 col-md order-last">
       <div class=" ratio ratio-16x9 border border-2 rounded bg-secondary">
+        <div id="customer_name_badge_container" class="width-100 h-100 position-absolute d-none">
+          <span id="customer_name_badge"
+            class="badge rounded-pill bg-light text-dark border position-absolute top-0 end-0"></span>
+        </div>
         <video id="remote_video" class="">Your browser does not support video tag.</video>
       </div>
     </div>
@@ -65,7 +66,7 @@
   <!-- Third row -->
   <div class="row g-2">
     <!-- Video controls -->
-    <div class="col-12 col-sm">
+    <div class="col-12 col-md">
       <div class="d-flex justify-content-center gap-3">
         <button aria-label="Toggle camera" id="toggle_camera" class="toggle-button btn btn-danger d-none"><i
             class="fa-solid fa-video-slash"></i></button>
@@ -186,11 +187,13 @@
   // FUNCTIONS
   /* Update customer card's fields with the customer object's fields */
   function updateCustomerCard(customer, isGuest) {
+    document.getElementById("customer_name_badge_container").classList.remove("d-none");
     customerInfoCard.classList.remove("d-none");
+
     if (isGuest) {
       document.querySelector("#customer_info_card #customer_name").innerText =
         customer.short_name;
-      document.querySelector("#customer_name_mobile").innerText = customer.short_name;
+      document.querySelector("#customer_name_badge ").innerText = customer.short_name;
       document.querySelector("#customer_info_card #customer_type").innerText =
         "Guest Customer";
       document.querySelector("#customer_info_card #customer_id").innerText =
@@ -205,7 +208,7 @@
     } else {
       document.querySelector("#customer_info_card #customer_name").innerText =
         customer.full_name;
-      document.querySelector("#customer_name_mobile").innerText = customer.full_name;
+      document.querySelector("#customer_name_badge").innerText = customer.full_name;
       document.querySelector("#customer_info_card #customer_type").innerText = "Customer";
       document.querySelector("#customer_info_card #customer_id").innerText =
         customer.cust_id;
