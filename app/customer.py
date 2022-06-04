@@ -254,3 +254,31 @@ def on_disconnect():
     print("### Client disconnected")
     #  room = session['room_id']
     #  emit("end meeting", include_self=False, room=room)
+
+
+@socketio.on('webrtc offer', namespace="/meeting")
+def on_webrtc_offer(data):
+    """Sent by clients when they create an SDP offer to start the call."""
+    room = session['room_id']
+    emit("webrtc offer", data, include_self=False, room=room)
+
+
+@socketio.on('webrtc answer', namespace="/meeting")
+def on_webrtc_answer(data):
+    """Sent by clients when they create an SDP answer to pick up the call."""
+    room = session['room_id']
+    emit("webrtc answer", data, include_self=False, room=room)
+
+
+@socketio.on('webrtc ice candidate', namespace="/meeting")
+def on_webrtc_ice_candidate(data):
+    """Sent by clients when they create an ICE candidate."""
+    room = session['room_id']
+    emit("webrtc ice candidate", data, include_self=False, room=room)
+
+
+@socketio.on('start call', namespace="/meeting")
+def on_start_call():
+    """Sent by clients when they want to initiate the call."""
+    room = session['room_id']
+    emit("start call", include_self=False, room=room)

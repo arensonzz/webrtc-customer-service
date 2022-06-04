@@ -49,9 +49,9 @@
       <div class=" ratio ratio-16x9 border border-2 rounded bg-secondary">
         <div id="customer_name_badge_container" class="width-100 h-100 position-absolute d-none">
           <span id="customer_name_badge"
-            class="badge rounded-pill bg-light text-dark border position-absolute top-0 end-0"></span>
+            class="customer-name-badge badge rounded-pill bg-light text-dark border position-absolute top-0 end-0"></span>
         </div>
-        <video id="remote_video" class="">Your browser does not support video tag.</video>
+        <video autoplay id="remote_video" class="">Your browser does not support video tag.</video>
       </div>
     </div>
   </div>
@@ -158,7 +158,7 @@
 <!-- https://github.com/webrtchacks/adapter#readme-->
 <script src="{{ url_for("static", filename="webrtc-adapter/adapter.js") }}" charset="utf-8"></script>
 <script charset="utf-8">
-  // GLOBAL DEFINITIONS
+  // === GLOBAL DEFINITIONS ===
   // DOM elements
   const socket = io("/meeting");
   const confirmLeave = document.getElementById("confirm_leave");
@@ -171,20 +171,44 @@
   const initiateVideo = document.getElementById("initiate_video");
   const localVideo = document.getElementById("local_video");
   const remoteVideo = document.getElementById("remote_video");
-
   // Variables
-  const mediaStreamConstraints = {
-    video: true,
-    audio: true,
-  };
-  let localStream = null;
   let isCameraOpen = false;
   let isMicOpen = false;
   let isVideoInitiated = false;
   let customer = null;
   let isGuest = null;
+  // WebRTC variables
+  // Default constraints for media stream
+  const mediaStreamConstraints = {
+    video: {
+      width: 1280,
+      height: 720,
+      facingMode: "user",
+    },
+    audio: true,
+  };
+  // Free public STUN servers provided by Google.
+  const iceServers = {
+    iceServers: [
+      {
+        urls: "stun:stun.l.google.com:19302",
+      },
+      {
+        urls: "stun:stun1.l.google.com:19302",
+      },
+      {
+        urls: "stun:stun2.l.google.com:19302",
+      },
+      {
+        urls: "stun:stun3.l.google.com:19302",
+      },
+    ],
+  };
+  let localStream = null;
+  let remoteStream = null;
+  let rtcPeerConnection = null; // connection between the local device and remote peer
 
-  // FUNCTIONS
+  // === FUNCTIONS ===
   /* Update customer card's fields with the customer object's fields */
   function updateCustomerCard(customer, isGuest) {
     document.getElementById("customer_name_badge_container").classList.remove("d-none");
@@ -222,29 +246,28 @@
   }
 
   /* Get camera and mic permissions from user */
-  function onInitiateVideo() {
-    navigator.mediaDevices
-      .getUserMedia(mediaStreamConstraints)
-      .then((stream) => {
-        // start with camera and mic disabled
-        stream.getTracks().forEach((track) => {
-          track.enabled = false;
-        });
-        localVideo.srcObject = stream;
-        localVideo.play();
-        // set global variables
-        localStream = stream;
-        isVideoInitiated = true;
-        document.getElementById("initiate_video_container").classList.add("d-none");
-        toggleCamera.classList.remove("d-none");
-        toggleMic.classList.remove("d-none");
-        leaveMeeting2.classList.remove("d-none");
-        isCameraOpen = false;
-        isMicOpen = false;
-      })
-      .catch((err) => {
-        console.log("navigator.getUserMedia error: " + err);
+  async function onInitiateVideo() {
+    try {
+      let stream = await navigator.mediaDevices.getUserMedia(mediaStreamConstraints);
+      // start with camera and mic disabled
+      stream.getTracks().forEach((track) => {
+        track.enabled = false;
       });
+      localVideo.srcObject = stream;
+      localVideo.play();
+      // set global variables
+      localStream = stream;
+      isVideoInitiated = true;
+      document.getElementById("initiate_video_container").classList.add("d-none");
+      toggleCamera.classList.remove("d-none");
+      toggleMic.classList.remove("d-none");
+      leaveMeeting2.classList.remove("d-none");
+      isCameraOpen = false;
+      isMicOpen = false;
+      socket.emit("start call");
+    } catch (err) {
+      console.log("navigator.getUserMedia error: " + err);
+    }
   }
 
   /* Toggle local camera on and off */
@@ -307,11 +330,62 @@
     }
   }
 
+  /* Disconnect from socket and end meeting */
   function endMeeting() {
     socket.emit("left", {}, async () => {
       socket.disconnect();
       window.location.replace('{{ url_for("customer.leave_meeting") }}');
     });
+  }
+
+  // WebRTC Functions
+  function addLocalTracks(rtcPeerConnection) {
+    localStream.getTracks().forEach((track) => {
+      rtcPeerConnection.addTrack(track, localStream);
+    });
+  }
+
+  async function createOffer(rtcPeerConnection) {
+    let sessionDescription;
+    try {
+      sessionDescription = await rtcPeerConnection.createOffer();
+      rtcPeerConnection.setLocalDescription(sessionDescription);
+    } catch (error) {
+      console.error("Could not create SDP offer: ", error);
+    }
+
+    socket.emit("webrtc offer", {
+      type: "webrtc offer",
+      sdp: sessionDescription,
+    });
+  }
+
+  async function createAnswer(rtcPeerConnection) {
+    let sessionDescription;
+    try {
+      sessionDescription = await rtcPeerConnection.createAnswer();
+      rtcPeerConnection.setLocalDescription(sessionDescription);
+    } catch (error) {
+      console.error("Could not create SDP answer: ", error);
+    }
+
+    socket.emit("webrtc answer", {
+      sdp: sessionDescription,
+    });
+  }
+
+  function setRemoteStream(event) {
+    remoteVideo.srcObject = event.streams[0];
+    remoteStream = event.stream;
+  }
+
+  function sendIceCandidate(event) {
+    if (event.candidate) {
+      socket.emit("webrtc ice candidate", {
+        label: event.candidate.sdpMLineIndex,
+        candidate: event.candidate.candidate,
+      });
+    }
   }
 
   // Copy invite link modal
@@ -359,11 +433,10 @@
   // Emit joined event to inform other users in the room
   socket.on("connect", () => {
     socket.emit("joined");
-    console.log("SocketIO: connect");
   });
 
-  socket.on("client joined", (data) => {
-    console.log("SocketIO: client joined");
+  /* When we receive this event it means another person has entered the room */
+  socket.on("client joined", async (data) => {
     // If signal came from non representative then update customer card
     if (!data.is_rep) {
       customer = data.customer;
@@ -379,18 +452,54 @@
           customer: customer,
         }),
       }).catch((error) => {
-        console.error("Error", error);
+        console.error("Could not save customer info to session for future use: ", error);
       });
       // Update customer card
       updateCustomerCard(customer, isGuest);
     }
   });
 
+  socket.on("start call", async () => {
+    // Start call
+    rtcPeerConnection = new RTCPeerConnection(iceServers);
+    addLocalTracks(rtcPeerConnection);
+    // when other person adds tracks to peer connection, ontrack is fired
+    rtcPeerConnection.ontrack = setRemoteStream;
+    rtcPeerConnection.onicecandidate = sendIceCandidate;
+    await createOffer(rtcPeerConnection);
+  });
+
   socket.on("end meeting", async () => {
-    console.log("SocketIO: end meeting");
     socket.disconnect();
     // window.location.href = '{{ url_for("customer.leave_meeting") }}';
     window.location.replace('{{ url_for("customer.leave_meeting") }}');
+  });
+
+  // WebRTC socket events
+  socket.on("webrtc offer", async (data) => {
+    if (localStream === null) {
+      initiateVideo.click();
+    }
+
+    rtcPeerConnection = new RTCPeerConnection(iceServers);
+    addLocalTracks(rtcPeerConnection);
+    rtcPeerConnection.ontrack = setRemoteStream;
+    rtcPeerConnection.onicecandidate = sendIceCandidate;
+    rtcPeerConnection.setRemoteDescription(data.sdp);
+    await createAnswer(rtcPeerConnection);
+  });
+
+  socket.on("webrtc answer", (data) => {
+    rtcPeerConnection.setRemoteDescription(data.sdp);
+  });
+
+  socket.on("webrtc ice candidate", (data) => {
+    // ICE candidate configuration.
+    var candidate = new RTCIceCandidate({
+      sdpMLineIndex: data.label,
+      candidate: data.candidate,
+    });
+    rtcPeerConnection.addIceCandidate(candidate);
   });
 
   // End meeting after user confirms

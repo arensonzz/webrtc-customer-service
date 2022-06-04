@@ -46,16 +46,33 @@ nav .navbar-brand {
   max-width: 800px;
 }
 
-// customer/meeting.html
+// Mobile screen
 @media (max-width: 575px) {
   .navbar-flex-break {
     flex: 0 0 100%;
     height: 0;
   }
+
+  .navbar-buttons {
+    button {
+      border-radius: 0;
+    }
+  }
 }
 
+// Larger than mobile screen
 @media (min-width: 576px) {
   .navbar-buttons-end {
     margin-left: auto;
   }
+
+  .navbar-buttons {
+    button {
+      border-radius: 50rem;
+    }
+  }
+}
+
+.customer-name-badge {
+  z-index: 99;
 }

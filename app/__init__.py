@@ -15,7 +15,8 @@ def create_app(test_config=None):
     app.config.from_mapping(
         SECRET_KEY='dev',
         SESSION_TYPE='filesystem',
-        SESSION_PERMANENENT=False,
+        SESSION_PERMANENENT=True,
+        SESSION_COOKIE_SECURE=True,
     )
 
     if test_config is None:
