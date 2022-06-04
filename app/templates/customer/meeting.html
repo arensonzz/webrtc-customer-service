@@ -11,7 +11,7 @@
 {% block navbar_nav %}
 <div class="navbar-flex-break"></div>
 <div id="navbar_buttons"
-  class="navbar-buttons m-2 flex-fill d-flex flex-column flex-sm-row gap-1 justify-content-start">
+  class="my-1 navbar-buttons flex-fill d-flex flex-column flex-sm-row gap-1 justify-content-start">
   <!-- Button that fires modal to copy invite link -->
   <div class="flex-grow-1 flex-sm-grow-0">
     {% if "rep_id" in session %}
@@ -20,7 +20,7 @@
     {% endif %}
   </div>
   <div class="flex-grow-1 flex-sm-grow-0 navbar-buttons-end">
-    <button type="button" class="w-100 btn btn-danger" id="leave_prompt" data-bs-toggle="modal"
+    <button type="button" class="w-100 btn btn-outline-danger" id="leave_prompt" data-bs-toggle="modal"
       data-bs-target="#leave_meeting_modal">End
       meeting</button>
   </div>
@@ -35,56 +35,74 @@
     <span class="visually-hidden">Loading...</span>
   </div>
 </div> -->
-<div class="container-fluid">
+<div class="container">
   <!-- First row -->
-  <div class="d-flex flex-column flex-sm-row gap-3 mb-3">
-    <div class="flex-equal-width ratio ratio-16x9 border border-2 rounded">
-      <video id="local_video" class="" muted>Your browser does not support video tag.</video>
+  <div class="row g-2 mb-2">
+    <div class="d-md-none col-6 align-self-end text-center">
+      <h1 id="customer_name_mobile" class="h5"></h1>
+
+    </div>
+    <div class="ms-auto ms-md-0 col-6 col-md">
+      <div class="ratio ratio-16x9 border border-2 rounded bg-secondary">
+        <video id="local_video" class="" muted>Your browser does not support video tag.</video>
+      </div>
     </div>
 
-    <div class="flex-equal-width ratio ratio-16x9 border border-2 rounded">
-      <video id="remote_video" class="" muted>Your browser does not support video tag.</video>
+    <div class="col-12 col-md order-last order-md-first ">
+      <div class=" ratio ratio-16x9 border border-2 rounded bg-secondary">
+        <video id="remote_video" class="">Your browser does not support video tag.</video>
+      </div>
     </div>
   </div>
 
   <!-- Second row -->
-  <div class="d-flex flex-column flex-sm-row gap-3 justify-content-center">
-    <button id="initiate_video" class=" btn btn-outline-primary mb-3">Join with camera and microphone</button>
+  <div id="initiate_video_container" class="row g-2 my-2">
+    <div class="col-12 text-center">
+      <button id="initiate_video" class=" btn btn-primary mb-3">Join with camera and microphone</button>
+    </div>
   </div>
 
-
   <!-- Third row -->
-  <div class="d-flex flex-column flex-sm-row gap-3">
+  <div class="row g-2">
     <!-- Video controls -->
-    <div id="" class="flex-equal-width text-center">
-      <button aria-label="Toggle camera" id="toggle_camera" class="toggle-button btn btn-danger d-none"><i
-          class="fa-solid fa-video-slash"></i></button>
-      <button aria-label="Toggle microphone" id="toggle_mic" class="toggle-button btn btn-danger d-none"><i
-          class="fa-solid fa-microphone-slash"></i></button>
+    <div class="col-12 col-sm">
+      <div class="d-flex justify-content-center gap-3">
+        <button aria-label="Toggle camera" id="toggle_camera" class="toggle-button btn btn-danger d-none"><i
+            class="fa-solid fa-video-slash"></i></button>
+        <button aria-label="Toggle microphone" id="toggle_mic" class="toggle-button btn btn-danger d-none"><i
+            class="fa-solid fa-microphone-slash"></i></button>
+        <button aria-label="End meeting" id="leave_meeting_prompt_2" class="toggle-button btn btn-danger d-none"
+          data-bs-toggle="modal" data-bs-target="#leave_meeting_modal"><i class="fa-solid fa-phone-flip"></i></button>
+      </div>
     </div>
+    <!-- Force customer info card to new row after md -->
+    <div class="d-block d-md-none col-sm"></div>
+    <div class="d-block d-md-none w-100"></div>
 
     <!-- Customer info card -->
-    <div class="flex-equal-width d-flex justify-content-center">
+    <div class="col-12 col-sm">
       {% if "rep_id" in session %}
-      <div id="customer_info_card" class="card text-dark bg-light d-none w-100">
-        <div class="card-body">
-          <h5 id="customer_name" class="card-title"></h5>
-          <h6 id="customer_type" class="card-subtitle mb-2 text-muted"></h6>
-          <div class="row">
-            <p class="col-4 fw-bold">ID</p>
-            <p id="customer_id" class="col-8 card-text"></p>
-          </div>
-          <div class="row">
-            <p class="col-4 fw-bold">Name</p>
-            <p id="customer_short_name" class="col-8 card-text"></p>
-          </div>
-          <div class="row">
-            <p class="col-4 fw-bold">Phone</p>
-            <p id="customer_phone" class="col-8 card-text"></p>
-          </div>
-          <div class="row">
-            <p class="col-4 fw-bold">Email</p>
-            <p id="customer_email" class="col-8 card-text"></p>
+      <div class="d-flex justify-content-center">
+        <div id="customer_info_card" class="card text-dark bg-light d-none w-100">
+          <div class="card-body">
+            <h5 id="customer_name" class="card-title"></h5>
+            <h6 id="customer_type" class="card-subtitle mb-2 text-muted"></h6>
+            <div class="row">
+              <p class="col-4 fw-bold">ID</p>
+              <p id="customer_id" class="col-8 card-text"></p>
+            </div>
+            <div class="row">
+              <p class="col-4 fw-bold">Name</p>
+              <p id="customer_short_name" class="col-8 card-text"></p>
+            </div>
+            <div class="row">
+              <p class="col-4 fw-bold">Phone</p>
+              <p id="customer_phone" class="col-8 card-text"></p>
+            </div>
+            <div class="row">
+              <p class="col-4 fw-bold">Email</p>
+              <p id="customer_email" class="col-8 card-text"></p>
+            </div>
           </div>
         </div>
       </div>
@@ -148,6 +166,7 @@
   const customerInfoCard = document.getElementById("customer_info_card");
   const toggleCamera = document.getElementById("toggle_camera");
   const toggleMic = document.getElementById("toggle_mic");
+  const leaveMeeting2 = document.getElementById("leave_meeting_prompt_2");
   const initiateVideo = document.getElementById("initiate_video");
   const localVideo = document.getElementById("local_video");
   const remoteVideo = document.getElementById("remote_video");
@@ -171,6 +190,7 @@
     if (isGuest) {
       document.querySelector("#customer_info_card #customer_name").innerText =
         customer.short_name;
+      document.querySelector("#customer_name_mobile").innerText = customer.short_name;
       document.querySelector("#customer_info_card #customer_type").innerText =
         "Guest Customer";
       document.querySelector("#customer_info_card #customer_id").innerText =
@@ -185,6 +205,7 @@
     } else {
       document.querySelector("#customer_info_card #customer_name").innerText =
         customer.full_name;
+      document.querySelector("#customer_name_mobile").innerText = customer.full_name;
       document.querySelector("#customer_info_card #customer_type").innerText = "Customer";
       document.querySelector("#customer_info_card #customer_id").innerText =
         customer.cust_id;
@@ -211,9 +232,10 @@
         // set global variables
         localStream = stream;
         isVideoInitiated = true;
-        initiateVideo.classList.add("d-none");
+        document.getElementById("initiate_video_container").classList.add("d-none");
         toggleCamera.classList.remove("d-none");
         toggleMic.classList.remove("d-none");
+        leaveMeeting2.classList.remove("d-none");
         isCameraOpen = false;
         isMicOpen = false;
       })
@@ -282,6 +304,13 @@
     }
   }
 
+  function endMeeting() {
+    socket.emit("left", {}, async () => {
+      socket.disconnect();
+      window.location.replace('{{ url_for("customer.leave_meeting") }}');
+    });
+  }
+
   // Copy invite link modal
   inviteLinkModal.addEventListener("shown.bs.modal", () => {
     const inviteLink = document.getElementById("invite_link");
@@ -304,7 +333,10 @@
     // Reload customer info card if user is representative and customer is defined
     if (customerInfoCard) {
       customer = JSON.parse('{{ session["customer"]|default("{}")|tojson }}');
-      if (customer) {
+      console.log(customer);
+
+      // Check if customer is empty or not
+      if (Object.keys(customer).length !== 0 && customer.constructor === Object) {
         updateCustomerCard(customer, customer["is_guest"]);
       }
     }
@@ -316,6 +348,7 @@
   initiateVideo.addEventListener("click", onInitiateVideo);
   toggleCamera.addEventListener("click", onToggleCamera);
   toggleMic.addEventListener("click", onToggleMic);
+  leaveMeeting2.addEventListener("click", endMeeting);
 
   // SOCKET.IO
   // Put these JavaScript codes to the HTML file of the route
@@ -358,13 +391,7 @@
   });
 
   // End meeting after user confirms
-  confirmLeave.addEventListener("click", () => {
-    socket.emit("left", {}, async () => {
-      socket.disconnect();
-      // window.location.href = '{{ url_for("customer.leave_meeting") }}';
-      window.location.replace('{{ url_for("customer.leave_meeting") }}');
-    });
-  });
+  confirmLeave.addEventListener("click", endMeeting);
 
   // Disconnect from socket before leaving the page
   /* window.onbeforeunload = () => {
