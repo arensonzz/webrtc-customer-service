@@ -67,6 +67,15 @@ def get_pending_room(rep_id):
     return room_id
 
 
+def meeting_cleanup():
+    """Clear meeting information from session."""
+    session.pop("room_id", None)
+    session.pop("g_cust_id", None)
+    session.pop("cust_id", None)
+    session.pop("customer", None)
+    session.pop("is_guest", None)
+
+
 if __name__ == "__main__":
     print("is valid: ", is_phone_valid("+905350285934"))
     print("is valid: ", is_phone_valid("+9053502859345"))

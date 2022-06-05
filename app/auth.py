@@ -63,23 +63,24 @@ def register():
         return redirect(url_for("representative.index"))
 
     errors = {}
+    invalid_class = "is-invalid"
     if request.method == 'POST':
         f = request.form
         cur = get_db()
 
         if not f["email"]:
-            errors["email"] = "Email address is required"
+            errors["email"] = invalid_class
 
         if not f["password"]:
-            errors["password"] = "Password is required"
+            errors["password"] = invalid_class
         elif f["password"] != f["confirmation"]:
-            errors["confirmation"] = "Passwords do not match"
+            errors["confirmation"] = invalid_class
 
         if not f["short_name"]:
-            errors["short_name"] = "Short name is required for profile"
+            errors["short_name"] = invalid_class
 
         if not f["full_name"]:
-            errors["full_name"] = "Full name is required as identity information"
+            errors["full_name"] = invalid_class
 
         if not errors:
             try:
@@ -112,13 +113,14 @@ def login():
         f = request.form
         cur = get_db()
         is_bad_login = False
+        invalid_class = "is-invalid"
         errors = {}
 
         if not f["email"]:
-            errors["email"] = "Email address is required"
+            errors["email"] = invalid_class
 
         if not f["password"]:
-            errors["password"] = "Password is required"
+            errors["password"] = invalid_class
 
         if not errors:
             cur.execute("""SELECT rep_id, email_address, password FROM wcs.representative 

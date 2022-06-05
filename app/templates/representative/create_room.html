@@ -16,14 +16,17 @@ Create Room
       <div class="row mb-3">
         <label for="title" class="col-sm-3 col-form-label">Title</label>
         <div class="col-sm-9">
-          <input type="text" class="form-control" id="title" name="title" value="{{ request.form["title"] }}">
+          <input type="text" class="form-control {{ errors["title"] }}" id="title" name="title"
+            value="{{ request.form["title"] }}">
+          <div class="invalid-feedback">Title is required</div>
         </div>
       </div>
 
       <div class="row mb-3">
         <label for="password" class="col-sm-3 col-form-label">Password</label>
         <div class="col-sm-9">
-          <input type="password" class="form-control" id="password" name="password">
+          <input type="password" class="form-control {{ errors["password"] }}" id="password" name="password">
+          <div class="invalid-feedback">Password is required</div>
         </div>
       </div>
 

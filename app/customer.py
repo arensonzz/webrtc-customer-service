@@ -8,7 +8,7 @@ import logging
 from app.db import get_db
 from flask_socketio import emit, leave_room, join_room, rooms
 from . import socketio
-from .helpers import get_guest_customer, is_phone_valid, get_customer
+from .helpers import get_guest_customer, is_phone_valid, get_customer, meeting_cleanup
 
 
 # Uncomment following line to print DEBUG logs
@@ -162,10 +162,7 @@ def meeting():
     if cur.fetchone() is None:
         flash("The meeting has ended.", "warning")
         # Clear room from the session
-        session.pop("cust_id", None)
-        session.pop("g_cust_id", None)
-        session.pop("room_id", None)
-        session.pop("is_guest", None)
+        meeting_cleanup()
         return redirect(url_for("customer.index"))
 
     # DEBUG VALUES
@@ -180,11 +177,11 @@ def meeting():
 def leave_meeting():
     """Route which clears session and leaves the meeting."""
     if "room_id" in session:
+        room_id = session["room_id"]
+        customer = session.get("customer")
         # Clear session
-        room_id = session.pop("room_id")
-        session.pop("g_cust_id", None)
-        session.pop("cust_id", None)
-        customer = session.pop("customer", None)
+        meeting_cleanup()
+
         # Get names and flash info message
         message = Markup(f"The meeting with the id <b>{room_id}</b> has ended.")
         if "rep_id" in session and customer is not None:

@@ -98,7 +98,10 @@
             </div>
             <div class="row">
               <p class="col-4 fw-bold">Phone</p>
-              <p id="customer_phone" class="col-8 card-text"></p>
+              <div class="col-8">
+                <input disabled id="customer_phone" type="tel" value="" class="w-75" style="overflow-y:auto;">
+              </div>
+
             </div>
             <div class="row">
               <p class="col-4 fw-bold">Email</p>
@@ -157,6 +160,8 @@
 <!-- Include adapter for WebRTC -->
 <!-- https://github.com/webrtchacks/adapter#readme-->
 <script src="{{ url_for("static", filename="webrtc-adapter/adapter.js") }}" charset="utf-8"></script>
+<!-- Import intl-tel-input javascript file -->
+<script src="{{ url_for("static", filename="intl-tel-input/js/intlTelInput.js") }}"></script>
 <script charset="utf-8">
   // === GLOBAL DEFINITIONS ===
   // DOM elements
@@ -176,7 +181,7 @@
   let isMicOpen = false;
   let isVideoInitiated = false;
   let customer = null;
-  let isGuest = null;
+
   // WebRTC variables
   // Default constraints for media stream
   const mediaStreamConstraints = {
@@ -214,6 +219,11 @@
     document.getElementById("customer_name_badge_container").classList.remove("d-none");
     customerInfoCard.classList.remove("d-none");
 
+    var customerPhone = document.getElementById("customer_phone");
+    const iti = window.intlTelInput(customerPhone, {
+      utilsScript:
+        '{{ url_for("static", filename="intl-tel-input/js/utils.js?1638200991544") }}', // just for formatting/placeholders etc
+    });
     if (isGuest) {
       document.querySelector("#customer_info_card #customer_name").innerText =
         customer.short_name;
@@ -229,8 +239,7 @@
       phone_number = customer.phone_number ?? "-";
       email_address = customer.email_address ?? "-";
 
-      document.querySelector("#customer_info_card #customer_phone").innerText =
-        phone_number;
+      iti.setNumber(phone_number);
       document.querySelector("#customer_info_card #customer_email").innerText =
         email_address;
     } else {
@@ -242,8 +251,7 @@
         customer.cust_id;
       document.querySelector("#customer_info_card #customer_short_name").innerText =
         customer.short_name;
-      document.querySelector("#customer_info_card #customer_phone").innerText =
-        customer.phone_number;
+      iti.setNumber(phone_number);
       document.querySelector("#customer_info_card #customer_email").innerText =
         customer.email_address;
     }
@@ -429,7 +437,11 @@
   initiateVideo.addEventListener("click", onInitiateVideo);
   toggleCamera.addEventListener("click", onToggleCamera);
   toggleMic.addEventListener("click", onToggleMic);
-  leaveMeeting2.addEventListener("click", endMeeting);
+  // End meeting after user confirms
+  confirmLeave.addEventListener("click", endMeeting);
+  leaveMeeting2.addEventListener("click", () => {
+    document.getElementById("leavePrompt").click();
+  });
 
   // SOCKET.IO
   // Put these JavaScript codes to the HTML file of the route
@@ -504,9 +516,6 @@
     });
     rtcPeerConnection.addIceCandidate(candidate);
   });
-
-  // End meeting after user confirms
-  confirmLeave.addEventListener("click", endMeeting);
 
   // Disconnect from socket before leaving the page
   /* window.onbeforeunload = () => {

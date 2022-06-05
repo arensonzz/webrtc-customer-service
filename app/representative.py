@@ -67,21 +67,19 @@ def remember_customer():
 @login_required
 def create_room():
     """Create a unique meeting room."""
+    errors = {}
     # Check if there is existing room in database, update session accordingly
     session["room_id"] = get_pending_room(session["rep_id"])
 
     if request.method == "POST":
-        has_error = False
         f = request.form
 
         if not f["title"]:
-            flash("You must enter a title.", "warning")
-            has_error = True
-        elif not f["password"]:
-            flash("Password is required.", "warning")
-            has_error = True
+            errors["title"] = "is-invalid"
+        if not f["password"]:
+            errors["password"] = "is-invalid"
 
-        if not has_error:
+        if not errors:
             try:
                 cur = get_db()
 
@@ -105,4 +103,4 @@ def create_room():
             else:
                 return redirect(url_for("customer.meeting"))
 
-    return render_template("representative/create_room.html")
+    return render_template("representative/create_room.html", errors=errors)
