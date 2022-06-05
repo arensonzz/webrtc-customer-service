@@ -8,7 +8,7 @@ import logging
 from app.db import get_db
 from .auth import login_required, load_logged_in_user
 from flask_socketio import emit, leave_room, join_room as flask_join_room
-from .helpers import str_surround
+from .helpers import str_surround, get_pending_room
 import psycopg2
 from . import socketio
 
@@ -60,7 +60,6 @@ def remember_customer():
     """Save customer info to session for future use."""
     customer = request.json.get("customer")
     session["customer"] = customer
-    session["customer"]["is_guest"] = "g_cust_id" in session
     return "success", 200
 
 
@@ -68,9 +67,10 @@ def remember_customer():
 @login_required
 def create_room():
     """Create a unique meeting room."""
+    # Check if there is existing room in database, update session accordingly
+    session["room_id"] = get_pending_room(session["rep_id"])
+
     if request.method == "POST":
-        print(request.form)
-        cur = get_db()
         has_error = False
         f = request.form
 
@@ -83,27 +83,18 @@ def create_room():
 
         if not has_error:
             try:
-                # TODO: refactor NULL insert
-                # If customer is not selected insert NULL to cust_id in the database
-                if f.get("customer"):
-                    cur.execute("""INSERT INTO wcs.meeting_room (password, rep_id, cust_id, 
+                cur = get_db()
+
+                customer = f["customer"] or None
+                cur.execute("""INSERT INTO wcs.meeting_room (password, rep_id, cust_id, 
                         title, description) VALUES (%s, %s, %s, %s, %s)""",
-                                (generate_password_hash(f["password"]), session["rep_id"],
-                                 f.get("customer"), f["title"].strip(), f["description"].strip()))
-                else:
-                    cur.execute("""INSERT INTO wcs.meeting_room (password, rep_id, 
-                        title, description) VALUES (%s, %s, %s, %s)""",
-                                (generate_password_hash(f["password"]), session["rep_id"],
-                                 f["title"].strip(), f["description"].strip()))
+                            (generate_password_hash(f["password"]), session["rep_id"],
+                             customer, f["title"].strip(), f["description"].strip()))
 
                 g.db.commit()
-                cur.execute("SELECT room_id FROM wcs.meeting_room WHERE rep_id = %s",
-                            (session["rep_id"],))
-                g.db.commit()
-                room = cur.fetchone()
-                if room:
-                    session["room_id"] = room["room_id"]
-                    print("ROOM_ID: ", session["room_id"])
+                room_id = get_pending_room(session["rep_id"])
+                if room_id:
+                    session["room_id"] = room_id
                 else:
                     raise Exception("Could not create the room. Please contact the system admin.")
 

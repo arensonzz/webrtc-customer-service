@@ -1,5 +1,5 @@
 from .db import get_db
-from flask import g
+from flask import g, session
 import phonenumbers
 from phonenumbers import carrier
 from phonenumbers.phonenumberutil import number_type
@@ -51,6 +51,20 @@ def is_phone_valid(phone_number):
         is_valid = False
 
     return is_valid
+
+
+def get_pending_room(rep_id):
+    """Return the room_id if representative has pending room, otherwise return None."""
+    cur = get_db()
+    cur.execute("SELECT room_id FROM wcs.meeting_room WHERE rep_id = %s",
+                (rep_id,))
+    g.db.commit()
+    room = cur.fetchone()
+    room_id = None
+    if room:
+        room_id = room.get("room_id")
+
+    return room_id
 
 
 if __name__ == "__main__":

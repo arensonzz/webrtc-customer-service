@@ -43,7 +43,7 @@ def join_meeting(id):
     cust_id = None
     errors = {}
 
-    # Redirect customer to the ongoin meeting if there is one
+    # Redirect customer to the ongoing meeting if there is one
     if "room_id" in session:
         flash("You have ongoing meeting.", "warning")
         return redirect(url_for("customer.meeting"))
@@ -232,12 +232,13 @@ def on_joined():
     else:
         if session["is_guest"]:
             customer = get_guest_customer(g_cust_id=session["g_cust_id"])
+            customer["is_guest"] = True
         else:
             customer = get_customer(session["cust_id"])
+            customer["is_guest"] = False
 
     # Alert other clients of the joining client
-    emit("client joined", {'is_rep': is_rep, 'is_guest': session.get("is_guest"),
-                           'customer': customer}, to=room_id, include_self=False)
+    emit("client joined", {'is_rep': is_rep, 'customer': customer}, to=room_id, include_self=False)
 
 
 @socketio.on('left', namespace="/meeting")

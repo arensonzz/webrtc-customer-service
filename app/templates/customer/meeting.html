@@ -92,7 +92,7 @@
               <p class="col-4 fw-bold">ID</p>
               <p id="customer_id" class="col-8 card-text"></p>
             </div>
-            <div class="row">
+            <div id="customer_name_row" class="row">
               <p class="col-4 fw-bold">Name</p>
               <p id="customer_short_name" class="col-8 card-text"></p>
             </div>
@@ -223,12 +223,16 @@
       document.querySelector("#customer_info_card #customer_id").innerText =
         customer.g_cust_id;
       document
-        .querySelector("#customer_info_card #customer_short_name")
+        .querySelector("#customer_info_card #customer_name_row")
         .classList.add("d-none");
+
+      phone_number = customer.phone_number ?? "-";
+      email_address = customer.email_address ?? "-";
+
       document.querySelector("#customer_info_card #customer_phone").innerText =
-        customer.phone_number;
+        phone_number;
       document.querySelector("#customer_info_card #customer_email").innerText =
-        customer.email_address;
+        email_address;
     } else {
       document.querySelector("#customer_info_card #customer_name").innerText =
         customer.full_name;
@@ -440,7 +444,6 @@
     // If signal came from non representative then update customer card
     if (!data.is_rep) {
       customer = data.customer;
-      isGuest = data.is_guest;
       // Save customer to session
       fetch('{{ url_for("representative.remember_customer") }}', {
         method: "POST",
@@ -455,7 +458,7 @@
         console.error("Could not save customer info to session for future use: ", error);
       });
       // Update customer card
-      updateCustomerCard(customer, isGuest);
+      updateCustomerCard(customer, customer["is_guest"]);
     }
   });
 
