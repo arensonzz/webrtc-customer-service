@@ -2,11 +2,11 @@ from .auth import customer_required
 from flask import (
     Blueprint, flash, g, redirect, render_template, request, session, url_for, Markup
 )
-from werkzeug.security import check_password_hash, generate_password_hash
+from werkzeug.security import check_password_hash
 
 import logging
 from app.db import get_db
-from flask_socketio import emit, leave_room, join_room, rooms
+from flask_socketio import emit, leave_room, join_room
 from . import socketio
 from .helpers import get_guest_customer, is_phone_valid, get_customer, meeting_cleanup
 

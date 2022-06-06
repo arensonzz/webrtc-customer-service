@@ -1,5 +1,5 @@
 import os
-from flask import Flask, redirect, url_for
+from flask import Flask
 from flask_session import Session
 from flask_socketio import SocketIO
 

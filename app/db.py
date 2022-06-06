@@ -1,5 +1,5 @@
 import psycopg2
-from psycopg2.extras import DictCursor, RealDictCursor
+from psycopg2.extras import RealDictCursor
 
 import click
 from flask import current_app, g

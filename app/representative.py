@@ -1,16 +1,15 @@
 from flask import (
-    Blueprint, flash, g, redirect, render_template, request, session, url_for, Markup,
+    Blueprint, flash, g, redirect, render_template, request, session, url_for,
     jsonify
 )
 from werkzeug.security import check_password_hash, generate_password_hash
 
 import logging
 from app.db import get_db
-from .auth import login_required, load_logged_in_user
-from flask_socketio import emit, leave_room, join_room as flask_join_room
+from .auth import login_required
+from flask_socketio import emit, join_room as flask_join_room
 from .helpers import str_surround, get_pending_room
 import psycopg2
-from . import socketio
 
 # Uncomment following line to print DEBUG logs
 #  logging.basicConfig(encoding='utf-8', level=logging.DEBUG)
@@ -19,7 +18,7 @@ bp = Blueprint('representative', __name__, url_prefix="/representative")
 
 
 # ROUTES
-@bp.route('/get_customers')
+@bp.route('/get-customers')
 @login_required
 def get_customers():
     """Find customers according to one of the given keys in GET request,
@@ -47,7 +46,7 @@ def get_customers():
     return jsonify(customers)
 
 
-@bp.route('/', methods=('GET', 'POST'))
+@bp.route('/', methods=('GET',))
 @login_required
 def index():
     """Redirect representatives to create_room."""
