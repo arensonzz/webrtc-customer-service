@@ -183,6 +183,10 @@ nav .navbar-brand {
   z-index: 99;
 }
 
+.card-phone-text {
+  resize: none;
+}
+
 .loading-background {
   position: absolute;
   top: 76px;
