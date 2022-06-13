@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS wcs.call_log (
     -- one of the cust_ids will be null
     cust_id bigint,
     g_cust_id bigint,
-    call_start_timestamp timestamp NOT NULL,
+    call_start_timestamp bigint NOT NULL,
     call_length_secs integer NOT NULL,
     active_talked_secs integer,
     camera_on_secs integer

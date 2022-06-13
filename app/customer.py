@@ -9,7 +9,7 @@ from app.db import get_db
 from flask_socketio import emit, leave_room, join_room
 from . import socketio
 from .helpers import get_guest_customer, is_phone_valid, get_customer, meeting_cleanup, is_room_full, set_room_is_full
-
+from datetime import datetime
 
 # Uncomment following line to print DEBUG logs
 logging.basicConfig(encoding='utf-8', level=logging.DEBUG)
@@ -173,11 +173,6 @@ def meeting():
         meeting_cleanup()
         return redirect(url_for("customer.index"))
 
-    # DEBUG VALUES
-    #  flash(f"Room: {session.get('room_id')} | ", "info")
-    #  flash(f"Rep id: {session.get('rep_id')} | ", "info")
-    #  flash(f"Cust id: {session.get('cust_id')} | ", "info")
-    #  flash(f"G cust id: {session.get('g_cust_id')}", "info")
     return render_template("customer/meeting.html")
 
 
@@ -198,6 +193,25 @@ def set_room_vacancy():
 def leave_meeting():
     """Route which clears session and leaves the meeting."""
     if "room_id" in session:
+        # Create call log if the video chat has been initiated
+        if "rep_id" in session and session.get("call_start_timestamp"):
+            # Create call log
+            cur = get_db()
+            customer = session.get("customer")
+            call_start_timestamp = session.get("call_start_timestamp")
+            camera_on_ms = session.get("camera_on_ms")
+            camera_on_secs = 0
+            if camera_on_ms is not None:
+                camera_on_secs = round(camera_on_ms / 1000)
+            call_length_secs = round(int(datetime.timestamp(datetime.now())) - int(call_start_timestamp) / 1000)
+            cust_id = None if customer is None else customer.get("cust_id")
+            g_cust_id = None if customer is None else customer.get("g_cust_id")
+            cur.execute("""INSERT INTO wcs.call_log (rep_id, cust_id, g_cust_id, 
+                call_start_timestamp, call_length_secs, active_talked_secs, camera_on_secs)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)""", (session.get("rep_id"), cust_id,
+                                                         g_cust_id, call_start_timestamp, call_length_secs, 0,
+                                                         camera_on_secs))
+            g.db.commit()
         room_id = session["room_id"]
         customer = session.get("customer")
         # Clear session

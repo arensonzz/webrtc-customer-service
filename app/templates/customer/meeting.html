@@ -208,7 +208,12 @@
   let isMicOpen = false;
   let isVideoInitiated = false;
   let customer = null;
+  let callStartTimestamp = '{{ session["call_start_timestamp"] }}';
+  let cameraStartDate;
+  let cameraOnMs = parseInt('{{ session["camera_on_ms"]|default(0) }}');
+  let updateSessionInterval = null;
 
+  console.log("callStartTimestamp: ", callStartTimestamp);
   // WebRTC variables
   // Default constraints for media stream
   const mediaStreamConstraints = {
@@ -283,6 +288,28 @@
     }
   }
 
+  // Update session regularly for meeting log
+  function updateSession() {
+    if (isCameraOpen) {
+      updateCameraOnDuration();
+      cameraStartDate = +Date.now();
+    }
+
+    fetch('{{ url_for("representative.update_session_log") }}', {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        call_start_timestamp: callStartTimestamp,
+        camera_on_ms: cameraOnMs,
+      }),
+    }).catch((error) => {
+      console.error("Could not update the session log: ", error);
+    });
+  }
+
   /* Get camera and mic permissions from user */
   async function onInitiateVideo() {
     try {
@@ -305,9 +332,19 @@
       // show spinner
       waitingOtherParty.classList.remove("d-none");
       socket.emit("start call");
+
+      updateSessionInterval = setInterval(updateSession, 1000);
     } catch (err) {
       console.log("navigator.getUserMedia error: " + err);
     }
+  }
+
+  function updateCameraOnDuration() {
+    // calculate total camera on duration
+    let duration = +Date.now() - cameraStartDate;
+    console.log("Duration: ", duration);
+    cameraOnMs += +duration;
+    console.log("Camera on for: ", cameraOnMs);
   }
 
   /* Toggle local camera on and off */
@@ -328,6 +365,7 @@
       cameraIcon.classList.add("fa-video-slash");
       toggleCamera.classList.remove("btn-primary");
       toggleCamera.classList.add("btn-danger");
+      updateCameraOnDuration();
     } else {
       localStream.getVideoTracks().forEach((track) => {
         track.enabled = true;
@@ -337,6 +375,9 @@
       cameraIcon.classList.add("fa-video");
       toggleCamera.classList.remove("btn-danger");
       toggleCamera.classList.add("btn-primary");
+
+      // set camera start date
+      cameraStartDate = Date.now();
     }
   }
 
@@ -372,6 +413,8 @@
 
   /* Disconnect from socket and end meeting */
   function endMeeting() {
+    clearInterval(updateSessionInterval);
+    // Inform other user
     socket.emit("left", {}, async () => {
       socket.disconnect();
       window.location.replace('{{ url_for("customer.leave_meeting") }}');
@@ -446,6 +489,12 @@
         break;
       case "connected":
         setWaitingOtherState(false);
+        // Set call start date if not already set
+        if (!callStartTimestamp) {
+          callStartTimestamp = +Date.now();
+          console.log("callStartTimestamp: ", callStartTimestamp);
+        }
+
         // Set room as full
         fetch('{{ url_for("customer.set_room_vacancy") }}', {
           method: "POST",
@@ -459,7 +508,7 @@
         }).catch((error) => {
           console.error("Could not change room is_full status: ", error);
         });
-        console.log("### Connected");
+
         break;
       case "disconnected":
         setWaitingOtherState(true);
@@ -535,7 +584,7 @@
   // End meeting after user confirms
   confirmLeave.addEventListener("click", endMeeting);
   leaveMeeting2.addEventListener("click", () => {
-    document.getElementById("leavePrompt").click();
+    document.getElementById("leave_prompt").click();
   });
 
   // SOCKET.IO
@@ -608,7 +657,6 @@
   });
 
   socket.on("webrtc answer", (data) => {
-    console.log("### WebRTC answer");
     rtcPeerConnection.setRemoteDescription(data.sdp);
   });
 

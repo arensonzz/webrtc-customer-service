@@ -74,6 +74,8 @@ def meeting_cleanup():
     session.pop("cust_id", None)
     session.pop("customer", None)
     session.pop("is_guest", None)
+    session.pop("call_start_timestamp", None)
+    session.pop("camera_on_ms", None)
 
 
 def is_room_full(room_id):
@@ -96,9 +98,6 @@ def set_room_is_full(room_id, is_full):
     cur = get_db()
     cur.execute("UPDATE wcs.meeting_room SET is_full = %s WHERE room_id = %s",
                 (is_full, room_id))
-    print("#######")
-    print("####### room_id, is_full: ", room_id, is_full)
-    print("#######")
     g.db.commit()
 
 

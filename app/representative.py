@@ -18,6 +18,19 @@ bp = Blueprint('representative', __name__, url_prefix="/representative")
 
 
 # ROUTES
+@bp.route('/update-session-log', methods=('POST',))
+def update_session_log():
+    """Update representative call log variables in the session."""
+    # Do nothing if user type is not representative
+    if "rep_id" not in session:
+        return "success", 200
+
+    session["call_start_timestamp"] = request.json.get("call_start_timestamp")
+    session["camera_on_ms"] = request.json.get("camera_on_ms")
+
+    return "success", 200
+
+
 @bp.route('/get-customers')
 @login_required
 def get_customers():
