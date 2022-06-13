@@ -187,7 +187,10 @@
 <!-- https://github.com/webrtchacks/adapter#readme-->
 <script src="{{ url_for("static", filename="webrtc-adapter/adapter.js") }}" charset="utf-8"></script>
 <!-- Import intl-tel-input javascript file -->
+
 <script src="{{ url_for("static", filename="intl-tel-input/js/intlTelInput.js") }}"></script>
+
+<script src="{{ url_for("static", filename="scripts/vad.js") }}"></script>
 <script charset="utf-8">
   // === GLOBAL DEFINITIONS ===
   // DOM elements
@@ -210,8 +213,41 @@
   let customer = null;
   let callStartTimestamp = '{{ session["call_start_timestamp"] }}';
   let cameraStartDate;
+  let micStartDate;
+  let micOnMs = 0;
   let cameraOnMs = parseInt('{{ session["camera_on_ms"]|default(0) }}');
   let updateSessionInterval = null;
+
+  // VAD
+
+  // Create AudioContext
+  window.AudioContext = window.AudioContext || window.webkitAudioContext;
+  var audioContext = new AudioContext();
+
+  // Define function called by getUserMedia
+  function startUserMedia(stream) {
+    // Create MediaStreamAudioSourceNode
+    var source = audioContext.createMediaStreamSource(stream);
+
+    // Setup options
+    var options = {
+      source: source,
+      voice_stop: function () {
+        let duration = +Date.now() - micStartDate;
+        console.log("Mic Duration: ", duration);
+        micOnMs += +duration;
+        console.log("Mic on for: ", micOnMs);
+        console.log("voice_stop");
+      },
+      voice_start: function () {
+        console.log("voice_start");
+        micStartDate = +Date.now();
+      },
+    };
+
+    // Create VAD
+    var vad = new VAD(options);
+  }
 
   console.log("callStartTimestamp: ", callStartTimestamp);
   // WebRTC variables
@@ -304,6 +340,7 @@
       body: JSON.stringify({
         call_start_timestamp: callStartTimestamp,
         camera_on_ms: cameraOnMs,
+        mic_on_ms: micOnMs,
       }),
     }).catch((error) => {
       console.error("Could not update the session log: ", error);
@@ -314,6 +351,16 @@
   async function onInitiateVideo() {
     try {
       let stream = await navigator.mediaDevices.getUserMedia(mediaStreamConstraints);
+
+      startUserMedia(stream);
+
+      /*let stream = navigator.getUserMedia(
+        mediaStreamConstraints,
+        startUserMedia,
+        function (e) {
+          console.log("No live audio input in this browser: " + e);
+        }
+      ); */
       // start with camera and mic disabled
       stream.getTracks().forEach((track) => {
         track.enabled = false;
@@ -347,7 +394,15 @@
     console.log("Camera on for: ", cameraOnMs);
   }
 
+  function updateMicOnDuration() {
+    // calculate total mic on duration
+    let duration = +Date.now() - micStartDate;
+    console.log("Mic Duration: ", duration);
+    micOnMs += +duration;
+    console.log("Mic on for: ", micOnMs);
+  }
   /* Toggle local camera on and off */
+
   function onToggleCamera() {
     if (!isVideoInitiated) {
       alert("You must first give permissions for camera and mic usage.");
@@ -399,6 +454,7 @@
       micIcon.classList.add("fa-microphone-slash");
       toggleMic.classList.remove("btn-primary");
       toggleMic.classList.add("btn-danger");
+      updateMicOnDuration();
     } else {
       localStream.getAudioTracks().forEach((track) => {
         track.enabled = true;

@@ -27,6 +27,8 @@ def update_session_log():
 
     session["call_start_timestamp"] = request.json.get("call_start_timestamp")
     session["camera_on_ms"] = request.json.get("camera_on_ms")
+    session["mic_on_ms"] = request.json.get("mic_on_ms")
+    print("###", session["mic_on_ms"])
 
     return "success", 200
 

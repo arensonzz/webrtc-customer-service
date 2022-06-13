@@ -200,16 +200,20 @@ def leave_meeting():
             customer = session.get("customer")
             call_start_timestamp = session.get("call_start_timestamp")
             camera_on_ms = session.get("camera_on_ms")
+            mic_on_ms = session.get("mic_on_ms")
             camera_on_secs = 0
+            mic_on_secs = 0
             if camera_on_ms is not None:
                 camera_on_secs = round(camera_on_ms / 1000)
+            if mic_on_ms is not None:
+                mic_on_secs = round(mic_on_ms / 1000)
             call_length_secs = round(int(datetime.timestamp(datetime.now())) - int(call_start_timestamp) / 1000)
             cust_id = None if customer is None else customer.get("cust_id")
             g_cust_id = None if customer is None else customer.get("g_cust_id")
             cur.execute("""INSERT INTO wcs.call_log (rep_id, cust_id, g_cust_id, 
                 call_start_timestamp, call_length_secs, active_talked_secs, camera_on_secs)
                 VALUES (%s, %s, %s, %s, %s, %s, %s)""", (session.get("rep_id"), cust_id,
-                                                         g_cust_id, call_start_timestamp, call_length_secs, 0,
+                                                         g_cust_id, call_start_timestamp, call_length_secs, mic_on_secs,
                                                          camera_on_secs))
             g.db.commit()
         room_id = session["room_id"]
