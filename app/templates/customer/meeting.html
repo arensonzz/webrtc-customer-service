@@ -50,11 +50,6 @@
 
 {% block main %}
 
-<!-- <div id="loading_background" class="loading-background d-flex justify-content-center align-items-center">
-  <div class="spinner-border text-secondary" role="status">
-    <span class="visually-hidden">Loading...</span>
-  </div>
-</div> -->
 <div class="container">
   <!-- First row -->
   <div class="row g-2 mb-2">
@@ -66,7 +61,16 @@
     </div>
 
     <div class="col-12 col-md order-last">
-      <div class=" ratio ratio-16x9 border border-2 rounded bg-secondary">
+      <div class="position-relative ratio ratio-16x9 border border-2 rounded bg-secondary">
+        <div id="waiting_other_party"
+          class="loading-background d-flex flex-column justify-content-center align-items-center d-none">
+          <div class="spinner-border text-secondary" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+          <div class="mt-2">
+            Waiting for the other party to join...
+          </div>
+        </div>
         <div id="customer_name_badge_container" class="width-100 h-100 position-absolute d-none">
           <span id="customer_name_badge"
             class="customer-name-badge badge rounded-pill bg-light text-dark border position-absolute top-0 end-0"></span>
@@ -198,6 +202,7 @@
   const initiateVideo = document.getElementById("initiate_video");
   const localVideo = document.getElementById("local_video");
   const remoteVideo = document.getElementById("remote_video");
+  const waitingOtherParty = document.getElementById("waiting_other_party");
   // Variables
   let isCameraOpen = false;
   let isMicOpen = false;
@@ -297,6 +302,8 @@
       leaveMeeting2.classList.remove("d-none");
       isCameraOpen = false;
       isMicOpen = false;
+      // show spinner
+      waitingOtherParty.classList.remove("d-none");
       socket.emit("start call");
     } catch (err) {
       console.log("navigator.getUserMedia error: " + err);
@@ -371,6 +378,15 @@
     });
   }
 
+  /* Set the waiting other party state to true (waiting) or false (not waiting) */
+  function setWaitingOtherState(flag) {
+    if (flag) {
+      waitingOtherParty.classList.remove("d-none");
+    } else {
+      waitingOtherParty.classList.add("d-none");
+    }
+  }
+
   // WebRTC Functions
   function addLocalTracks(rtcPeerConnection) {
     localStream.getTracks().forEach((track) => {
@@ -421,6 +437,65 @@
     }
   }
 
+  /* Triggered when the WebRTC connection state changes */
+  function connectionStateChange() {
+    switch (rtcPeerConnection.connectionState) {
+      case "new":
+      case "checking":
+        setWaitingOtherState(true);
+        break;
+      case "connected":
+        setWaitingOtherState(false);
+        // Set room as full
+        fetch('{{ url_for("customer.set_room_vacancy") }}', {
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            is_full: true,
+          }),
+        }).catch((error) => {
+          console.error("Could not change room is_full status: ", error);
+        });
+        console.log("### Connected");
+        break;
+      case "disconnected":
+        setWaitingOtherState(true);
+
+        // Set room as not full
+        fetch('{{ url_for("customer.set_room_vacancy") }}', {
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            is_full: false,
+          }),
+        }).catch((error) => {
+          console.error("Could not change room is_full status: ", error);
+        });
+        break;
+      case "closed":
+        alert("Connection closed.");
+        break;
+      case "failed":
+        alert("Connection failed.");
+        break;
+      default:
+        break;
+    }
+  }
+
+  /* Add event listeners for WebRTC peer connection. */
+  function setConnectionEventListeners() {
+    rtcPeerConnection.ontrack = setRemoteStream;
+    rtcPeerConnection.onicecandidate = sendIceCandidate;
+    rtcPeerConnection.onconnectionstatechange = connectionStateChange;
+  }
+
   // Copy invite link modal
   inviteLinkModal.addEventListener("shown.bs.modal", () => {
     const inviteLink = document.getElementById("invite_link");
@@ -443,7 +518,6 @@
     // Reload customer info card if user is representative and customer is defined
     if (customerInfoCard) {
       customer = JSON.parse('{{ session["customer"]|default("{}")|tojson }}');
-      console.log(customer);
 
       // Check if customer is empty or not
       if (Object.keys(customer).length !== 0 && customer.constructor === Object) {
@@ -495,14 +569,27 @@
     }
   });
 
+  // Accept call if video is initiated otherwise reject
   socket.on("start call", async () => {
+    if (localStream) {
+      socket.emit("call accepted");
+    } else {
+      socket.emit("call rejected");
+    }
+  });
+
+  socket.on("call accepted", async () => {
+    console.log("socket.io: Other party accepted the call.");
     // Start call
     rtcPeerConnection = new RTCPeerConnection(iceServers);
     addLocalTracks(rtcPeerConnection);
+    setConnectionEventListeners();
     // when other person adds tracks to peer connection, ontrack is fired
-    rtcPeerConnection.ontrack = setRemoteStream;
-    rtcPeerConnection.onicecandidate = sendIceCandidate;
     await createOffer(rtcPeerConnection);
+  });
+
+  socket.on("call rejected", () => {
+    console.log("socket.io: Other party has not initiated their video.");
   });
 
   socket.on("end meeting", async () => {
@@ -513,36 +600,30 @@
 
   // WebRTC socket events
   socket.on("webrtc offer", async (data) => {
-    if (localStream === null) {
-      initiateVideo.click();
-    }
-
     rtcPeerConnection = new RTCPeerConnection(iceServers);
     addLocalTracks(rtcPeerConnection);
-    rtcPeerConnection.ontrack = setRemoteStream;
-    rtcPeerConnection.onicecandidate = sendIceCandidate;
+    setConnectionEventListeners();
     rtcPeerConnection.setRemoteDescription(data.sdp);
     await createAnswer(rtcPeerConnection);
   });
 
   socket.on("webrtc answer", (data) => {
+    console.log("### WebRTC answer");
     rtcPeerConnection.setRemoteDescription(data.sdp);
   });
 
   socket.on("webrtc ice candidate", (data) => {
     // ICE candidate configuration.
-    var candidate = new RTCIceCandidate({
-      sdpMLineIndex: data.label,
-      candidate: data.candidate,
-    });
-    rtcPeerConnection.addIceCandidate(candidate);
+    try {
+      let candidate = new RTCIceCandidate({
+        sdpMLineIndex: data.label,
+        candidate: data.candidate,
+      });
+      rtcPeerConnection.addIceCandidate(candidate);
+    } catch (err) {
+      console.err("Could not add ice candidate.");
+    }
   });
-
-  // Disconnect from socket before leaving the page
-  /* window.onbeforeunload = () => {
-    socket.disconnect();
-    return "Do you want to leave the meeting?";
-  }; */
 </script>
 
 {% endblock %}

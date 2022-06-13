@@ -8,7 +8,7 @@ import logging
 from app.db import get_db
 from flask_socketio import emit, leave_room, join_room
 from . import socketio
-from .helpers import get_guest_customer, is_phone_valid, get_customer, meeting_cleanup
+from .helpers import get_guest_customer, is_phone_valid, get_customer, meeting_cleanup, is_room_full, set_room_is_full
 
 
 # Uncomment following line to print DEBUG logs
@@ -43,10 +43,18 @@ def join_meeting(id):
     cust_id = None
     errors = {}
 
-    # Redirect customer to the ongoing meeting if there is one
-    if "room_id" in session:
-        flash("You have ongoing meeting.", "warning")
+    # Check room for capacity
+    if is_room_full(id):
+        flash("There are already two people connected to this meeting.", "warning")
+        return redirect(url_for("customer.index"))
+
+    # Redirect customer to the ongoing meeting if id's match
+    # otherwise clean meeting from session
+    if "room_id" in session and session["room_id"] == id:
+        flash("You reconnected to the meeting.", "warning")
         return redirect(url_for("customer.meeting"))
+    else:
+        meeting_cleanup()
 
     # Check if the room exists
     cur.execute("""SELECT room_id, cust_id, password FROM wcs.meeting_room WHERE room_id = %s""",
@@ -173,6 +181,19 @@ def meeting():
     return render_template("customer/meeting.html")
 
 
+@bp.route('/set-room-vacancy', methods=('POST',))
+def set_room_vacancy():
+    """Change is_full status of room according to information inf POST request."""
+    if "room_id" not in session:
+        flash("Your are not authorized for this.", "warning")
+        return redirect(url_for("customer.index"))
+
+    is_full = request.json.get("is_full")
+    room_id = session["room_id"]
+    set_room_is_full(room_id, is_full)
+    return "success", 200
+
+
 @bp.route('/leave-meeting')
 def leave_meeting():
     """Route which clears session and leaves the meeting."""
@@ -280,3 +301,24 @@ def on_start_call():
     """Sent by clients when they want to initiate the call."""
     room = session['room_id']
     emit("start call", include_self=False, room=room)
+
+
+@socketio.on('call accepted', namespace="/meeting")
+def on_call_accepted():
+    """Sent by clients when they accept the call request."""
+    room = session['room_id']
+    emit("call accepted", include_self=False, room=room)
+
+
+@socketio.on('call rejected', namespace="/meeting")
+def on_call_rejected():
+    """Sent by clients when they reject the call request."""
+    room = session['room_id']
+    emit("call rejected", include_self=False, room=room)
+
+
+@socketio.on('too many device connected', namespace="/meeting")
+def on_too_many_device_connected():
+    """Sent by clients when third device tries to join the call."""
+    room = session['room_id']
+    emit("too many device connected", include_self=False, room=room)

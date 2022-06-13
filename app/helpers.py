@@ -76,6 +76,32 @@ def meeting_cleanup():
     session.pop("is_guest", None)
 
 
+def is_room_full(room_id):
+    """Check if the meeting room with given id is full. Return True if full, False if not,
+    None if the room does not exist."""
+    cur = get_db()
+    cur.execute("SELECT is_full FROM wcs.meeting_room WHERE room_id = %s",
+                (room_id,))
+    g.db.commit()
+    room = cur.fetchone()
+    is_full = None
+    if room:
+        is_full = room["is_full"]
+
+    return is_full
+
+
+def set_room_is_full(room_id, is_full):
+    """Set is_full column of room to the given value."""
+    cur = get_db()
+    cur.execute("UPDATE wcs.meeting_room SET is_full = %s WHERE room_id = %s",
+                (is_full, room_id))
+    print("#######")
+    print("####### room_id, is_full: ", room_id, is_full)
+    print("#######")
+    g.db.commit()
+
+
 if __name__ == "__main__":
     print("is valid: ", is_phone_valid("+905350285934"))
     print("is valid: ", is_phone_valid("+9053502859345"))

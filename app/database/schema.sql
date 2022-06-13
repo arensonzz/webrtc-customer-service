@@ -55,7 +55,8 @@ CREATE TABLE IF NOT EXISTS wcs.meeting_room (
     cust_id bigint,
     g_cust_id bigint,
     title text NOT NULL,
-    description text NOT NULL
+    description text NOT NULL,
+    is_full boolean NOT NULL DEFAULT FALSE
 );
 
 ALTER TABLE wcs.call_log

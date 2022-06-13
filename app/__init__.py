@@ -1,5 +1,5 @@
 import os
-from flask import Flask
+from flask import Flask, flash
 from flask_session import Session
 from flask_socketio import SocketIO
 
@@ -58,5 +58,13 @@ def create_app(test_config=None):
         cur = db.get_db()
         cur.close()
         return "Server is working.", 200
+
+    # Define jinja2 functions
+    @app.context_processor
+    def jinja_flash_message():
+        def flash_message(str, type):
+            """Flash messages inside jinja templates"""
+            flash(str, type)
+        return dict(flash_message=flash_message)
 
     return app
