@@ -166,6 +166,6 @@ WebRTC Customer Service is free software published under the MIT license. See [L
 
 ## Contributors
 
-* [Erkan Vatan](https://github.com/arensonzz)
-* [Ozan Kukul](https://github.com/ozankukul)
+* [Erkan Vatan](https://github.com/arensonzz): Front-end, back-end, documentation
+* [Ozan Kukul](https://github.com/ozankukul): Back-end, WebRTC connections
 
