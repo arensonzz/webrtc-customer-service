@@ -1,6 +1,23 @@
+
 # WebRTC Customer Service
 
 We aim to provide free and open-source web video chat application to be used in the customer service domain.
+
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+## Contents
+
+- [About](#about)
+- [Requirements](#requirements)
+- [Running Server Locally](#running-server-locally)
+  - [Deploying to Production](#deploying-to-production)
+- [Routes](#routes)
+- [Features](#features)
+- [Technologies](#technologies)
+- [License](#license)
+- [Contributors](#contributors)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 ## About
 
@@ -86,7 +103,7 @@ This project is designed as a video call and customer service management system 
     https://localhost:5000
     ```
 
-### Note
+### Deploying to Production
 
 This Flask Werkzeug server is for development only. Check [Flask docs deploying section](https://flask.palletsprojects.com/en/2.1.x/deploying/) to learn how to deploy WSGI server to production. If you want to use additional HTTP server as a reverse proxy than you must declare that in the `app/init.py`. How to do that is explained in [proxy fix subsection](https://flask.palletsprojects.com/en/2.1.x/deploying/proxy_fix/).
 
@@ -115,7 +132,7 @@ There are customer only, representative only and general routes in the applicati
          style="margin: 10px 0; max-width: 100%; border: 1px black solid;" />
 
 * Customer representatives can create a meeting room. 
-    
+ 
     There are two types of meeting rooms. If representative selects the customer from customer database while creating the room, then meeting room is assigned to that customer only. Otherwise general meeting room is created. 
     <img src="docs/images/representative_create_meeting.gif"
          alt="Customer representative creates a meeting."
@@ -141,3 +158,14 @@ There are customer only, representative only and general routes in the applicati
 * [Bootstrap 5.1](https://getbootstrap.com/docs/5.1/getting-started/introduction/) CSS framework
 * [Socket.io](https://socket.io/docs/v4/client-api/) JS client API and [flask-socketio](https://flask-socketio.readthedocs.io/en/latest/getting_started.html) library
 * [PostgreSQL](https://www.postgresql.org/about/) database
+* [Font Awesome 6.1](https://fontawesome.com/start) icon pack
+
+## License
+
+WebRTC Customer Service is free software published under the MIT license. See [LICENSE](LICENSE) for details.
+
+## Contributors
+
+* [Erkan Vatan](https://github.com/arensonzz)
+* [Ozan Kukul](https://github.com/ozankukul)
+
